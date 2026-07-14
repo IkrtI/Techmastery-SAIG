@@ -23,22 +23,11 @@ event_id,segment,cls,ts_sec,verdict,note
 22,kmitl_b,person,1028.3,FP,ambiguous person mid zone - conservative call
 23,kmitl_b,motorcycle,1028.5,TP,rider sneaks along barrier during train
 24,kmitl_b,truck,1034.1,FP,queue-front pickup creeping over line
-25,kmitl_c,person,457.3,TP,rider enters crossing with barriers still down
-26,kmitl_c,motorcycle,457.5,TP,same violator moto box - dup pair with 25
-27,ram_b,motorcycle,822.1,TP,crosses rails as locomotive approaches
-28,ram_b,motorcycle,823.9,TP,crosses rails as locomotive approaches
-29,ram_b,motorcycle,824.9,TP,crosses rails as locomotive approaches
-30,ram_b,motorcycle,827.3,TP,crosses rails as train enters crossing
-31,ram_b,motorcycle,831.5,TP,crosses while train in crossing
-32,ram_b,car,844.9,TP,van crosses beyond line during train passage
-33,ram_b,motorcycle,846.0,TP,rider in zone during train tail
-34,ram_c,person,1208.8,TP,person crosses rails as train approaches station
-35,ram_c,motorcycle,1236.2,TP,rider crosses beside oncoming locomotive
-36,ram_c,motorcycle,1236.9,TP,rider crosses beside oncoming locomotive
-37,ram_c,person,1241.9,TP,person crosses next to moving carriages
-38,ram_c,motorcycle,1245.3,TP,rider crosses during train passage
-39,ram_c,motorcycle,1259.7,TP,rider crosses while green train passes
-40,ram_c,person,1263.5,TP,rider crosses while red train passes
-41,ram_c,motorcycle,1269.2,TP,surge across rails with barriers down at train tail
-42,ram_c,motorcycle,1269.4,TP,surge across rails with barriers down
-43,ram_c,person,1269.9,TP,surge across rails with barriers down
+44,kmitl_c,person,457.3,TP,rider enters crossing with barriers still down
+45,kmitl_c,motorcycle,457.5,TP,same violator moto box - dup pair with 44
+46,ram_b,motorcycle,827.6,TP,rider crosses rails as locomotive approaches
+47,ram_b,motorcycle,831.8,TP,rider crosses rails while train enters crossing
+48,ram_c,motorcycle,1206.2,TP,rider on rails while train approaches from station
+49,ram_c,motorcycle,1224.5,TP,rider crosses corridor as locomotive nears
+50,ram_c,motorcycle,1267.5,TP,rider crosses while carriages still passing
+51,ram_c,motorcycle,1268.9,TP,rider crosses while carriages still passing

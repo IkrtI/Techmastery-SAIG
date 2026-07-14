@@ -13,6 +13,18 @@ DEFAULT_CSV = Path(os.environ.get(
 CACHE_DIR = REPO_ROOT / "data" / "stats_cache"
 
 
+# the source CSV spells some categories multiple ways; merge known variants
+CAUSE_ALIASES = {
+    "ขับรถเร็วเกินอัตราที่กำหนด": "ขับรถเร็วเกินอัตรากำหนด",
+    "ขับรถตัดหน้ากระชั้นชิด": "คน/รถ/สัตว์ตัดหน้ากระชั้นชิด",
+}
+
+
+def _normalize(series):
+    s = series.astype(str).str.strip().str.replace(r"\s+", " ", regex=True)
+    return s.replace(CAUSE_ALIASES)
+
+
 def compute_stats(csv_path=None, use_cache=True) -> dict:
     csv_path = Path(csv_path or DEFAULT_CSV)
     cache_file = CACHE_DIR / f"{csv_path.stem}.json"
@@ -25,8 +37,8 @@ def compute_stats(csv_path=None, use_cache=True) -> dict:
     df["injuries"] = pd.to_numeric(df["injuries"], errors="coerce").fillna(0)
 
     def top_counts(col, n=10):
-        s = df[col].dropna()
-        s = s[s.astype(str).str.strip() != ""]
+        s = _normalize(df[col].dropna())
+        s = s[(s != "") & (s != "nan")]
         return [{"name": k, "count": int(v)} for k, v in s.value_counts().head(n).items()]
 
     by_hour = df["time"].dt.hour.value_counts().sort_index()

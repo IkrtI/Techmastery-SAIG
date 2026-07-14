@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
-  Bar, BarChart, CartesianGrid, Cell, Line, LineChart,
+  Bar, BarChart, CartesianGrid, Cell,
   ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
 import { apiGet, CLS_TH, SITE_TH, Stats } from "@/lib/api";
@@ -91,15 +91,17 @@ export default function Dashboard() {
 
       {a && (
         <div className="grid md:grid-cols-2 gap-4">
-          <Panel title="อุบัติเหตุรายชั่วโมง (ทั่วประเทศ)">
+          <Panel title="อุบัติเหตุแยกตามชั่วโมงของวัน — รวมทุกปี 2019-2025 (ทั่วประเทศ)">
             <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={a.by_hour}>
+              <BarChart data={a.by_hour}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e2630" />
-                <XAxis dataKey="hour" tick={{ fill: "#94a3b8", fontSize: 12 }} />
-                <YAxis tick={{ fill: "#94a3b8", fontSize: 12 }} />
-                <Tooltip contentStyle={{ background: "#11161d", border: "1px solid #1e2630" }} />
-                <Line type="monotone" dataKey="count" stroke="#38bdf8" dot={false} strokeWidth={2} />
-              </LineChart>
+                <XAxis dataKey="hour" tick={{ fill: "#94a3b8", fontSize: 11 }}
+                  tickFormatter={(h) => `${h}:00`} interval={2} />
+                <YAxis tick={{ fill: "#94a3b8", fontSize: 12 }} domain={[0, "auto"]} />
+                <Tooltip contentStyle={{ background: "#11161d", border: "1px solid #1e2630" }}
+                  labelFormatter={(h) => `ช่วง ${h}:00-${h}:59 น.`} />
+                <Bar dataKey="count" fill="#38bdf8" />
+              </BarChart>
             </ResponsiveContainer>
           </Panel>
 
