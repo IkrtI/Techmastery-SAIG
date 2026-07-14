@@ -1,4 +1,5 @@
-export const API = process.env.NEXT_PUBLIC_API ?? "http://localhost:8000";
+// 127.0.0.1 (not localhost): uvicorn binds IPv4 only; localhost may resolve to ::1
+export const API = process.env.NEXT_PUBLIC_API ?? "http://127.0.0.1:8000";
 
 export async function apiGet<T>(path: string): Promise<T> {
   const res = await fetch(`${API}/api${path}`, { cache: "no-store" });
