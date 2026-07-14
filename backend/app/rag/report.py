@@ -48,7 +48,43 @@ def build_law_context(hits) -> str:
     return "\n\n".join(lines)
 
 
-def generate_report(event: dict, store, llm, site_name=None, k=4) -> dict:
+def _template_report(event, hits, site_name) -> dict:
+    """Deterministic report built from the retrieved law chunks.
+
+    Used when the LLM is unavailable (OpenRouter free-tier exhaustion, network
+    down). Wording is fixed; every legal fact still comes from retrieval.
+    """
+    cls_th = CLS_TH.get(event["cls"], event["cls"])
+    ts = event.get("ts_sec") or 0.0
+    sections = []
+    for h in hits:
+        if not h.get("section"):
+            continue
+        excerpt = " ".join(h["text"].split())[:160]
+        sections.append({"section": h["section"], "text_excerpt": excerpt})
+        if len(sections) == 2:
+            break
+    return {
+        "summary": (
+            f"ระบบกล้อง AI ตรวจพบ{cls_th}เคลื่อนที่ข้ามเส้นหยุดเข้าเขตทางรถไฟ ณ "
+            f"{site_name or event['site_id']} ที่วินาทีที่ {ts:.1f} ของคลิป "
+            f"ขณะสถานะระบบเป็น '{event.get('state', 'active')}' "
+            "ซึ่งเป็นช่วงที่รถไฟกำลังผ่านหรือเครื่องกั้น/สัญญาณยังไม่เปิดให้ผ่าน"
+        ),
+        "law_sections": sections,
+        "fine": "ปรับไม่เกิน 1,000 บาท และตัดคะแนนความประพฤติ 1 คะแนน (ตามข้อกฎหมายที่สืบค้นได้)",
+        "recommendation": (
+            "หยุดรถห่างทางรถไฟไม่น้อยกว่า 5 เมตรทุกครั้งที่มีสัญญาณเตือน "
+            "และรอจนเครื่องกั้นเปิดเต็มที่ก่อนเคลื่อนรถผ่าน"
+        ),
+        "generated_by": "template",
+        "citations": [
+            {"section": h.get("section", ""), "score": h.get("score", 0.0)} for h in hits
+        ],
+    }
+
+
+def generate_report(event: dict, store, llm, site_name=None, k=4, allow_fallback=True) -> dict:
     query = f"{CLS_TH.get(event['cls'], event['cls'])} {VIOLATION_QUERY}"
     hits = store.search(query, k=k)
     user = REPORT_USER_TMPL.format(
@@ -58,11 +94,17 @@ def generate_report(event: dict, store, llm, site_name=None, k=4) -> dict:
         state=event.get("state", "active"),
         law_context=build_law_context(hits),
     )
-    raw = llm.complete([
-        {"role": "system", "content": REPORT_SYSTEM},
-        {"role": "user", "content": user},
-    ])
-    report = _extract_json(raw)
+    try:
+        raw = llm.complete([
+            {"role": "system", "content": REPORT_SYSTEM},
+            {"role": "user", "content": user},
+        ])
+        report = _extract_json(raw)
+        report["generated_by"] = "llm"
+    except Exception:
+        if not allow_fallback:
+            raise
+        return _template_report(event, hits, site_name)
     report["citations"] = [
         {"section": h.get("section", ""), "score": h.get("score", 0.0)} for h in hits
     ]

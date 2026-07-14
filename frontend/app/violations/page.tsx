@@ -13,7 +13,15 @@ function ReportCard({ report }: { report: Report }) {
   return (
     <div className="space-y-3 text-sm">
       <div>
-        <div className="font-semibold text-accent2 mb-1">สรุปเหตุการณ์</div>
+        <div className="flex items-center gap-2 mb-1">
+          <span className="font-semibold text-accent2">สรุปเหตุการณ์</span>
+          <span className={`text-[10px] rounded px-1.5 py-0.5 ${
+            report.generated_by === "template"
+              ? "bg-amber-400/20 text-amber-300"
+              : "bg-emerald-400/20 text-emerald-300"}`}>
+            {report.generated_by === "template" ? "เทมเพลต (LLM ไม่พร้อมใช้งาน)" : "สร้างโดย LLM"}
+          </span>
+        </div>
         <p className="leading-relaxed">{report.summary}</p>
       </div>
       <div>

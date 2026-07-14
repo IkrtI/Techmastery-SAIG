@@ -31,6 +31,7 @@ export interface Report {
   law_sections: LawSection[];
   fine: string;
   recommendation: string;
+  generated_by?: "llm" | "template";
   citations?: { section: string; score: number }[];
 }
 
