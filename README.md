@@ -32,8 +32,9 @@
 
 ### เทคนิคเด่น (สิ่งที่ต้องสู้กับข้อมูลจริง)
 
-1. **Train-evidence heuristic** — COCO มองตู้สินค้าด้านข้างเป็น `truck` ไม่ใช่ `train`
-   → ใช้กติกา "ยานพาหนะกว้าง ≥ N px ที่ทับเขตราง" + ตรวจขอบล่าง bbox (ล้อ) + temporal hysteresis
+1. **Train-evidence heuristic** — COCO มองตู้สินค้าด้านข้างเป็น `truck` และมองสถานี BTS เป็น `train`
+   → กติกา 3 ชั้น: (ก) `train` ต้อง*เคลื่อนที่*ก่อนนับ (กันโครงสร้างนิ่ง) (ข) truck กว้าง ≥ N px ที่ทับเขตราง
+   + ขอบล่าง bbox อยู่ระยะไกล (กันกระบะใกล้กล้อง) (ค) temporal hysteresis กัน detection กระพริบ
 2. **Crossing State Machine** — `IDLE → WARNING → ACTIVE → clear` ด้วย streak แบบ hysteresis
    กันสัญญาณหลอกจาก detection กระพริบ
 3. **Curated segments + scene matcher** — ฟุตเทจต้นฉบับเป็นกล้องมือถือเดินเปลี่ยนมุม

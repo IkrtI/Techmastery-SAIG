@@ -13,7 +13,7 @@ from .config import SiteConfig
 from .detector import Detector
 from .scene_match import SceneMatcher, grab_frame
 from .state_machine import CrossingStateMachine, State
-from .train_signal import train_signal
+from .train_signal import TrainEvidence
 from .violations import ViolationDetector
 
 STATE_COLORS = {
@@ -96,6 +96,7 @@ def process(video_path, cfg: SiteConfig, conn=None, artifacts_dir=None,
     detector = detector or Detector()
     sm = CrossingStateMachine(cfg.warning_frames, cfg.clear_frames)
     vd = ViolationDetector(cfg.stop_line)
+    evidence = TrainEvidence(cfg)
 
     writer = None
     overlay_raw = site_dir / f"overlay_{video_id}_raw.mp4"
@@ -110,6 +111,7 @@ def process(video_path, cfg: SiteConfig, conn=None, artifacts_dir=None,
     pending_clips = []
     skip_streak = 0
     scene_lost = False
+    last_train_frame = None
     stats = {"considered": 0, "accepted": 0, "restricted": 0, "train_frames": 0,
              "states": {"idle": 0, "warning": 0, "active": 0}}
     debug_count = 0
@@ -136,8 +138,10 @@ def process(video_path, cfg: SiteConfig, conn=None, artifacts_dir=None,
         skip_streak = 0
 
         detections = detector.track(frame)
-        train_present, train_in_zone = train_signal(detections, cfg)
+        train_present, train_in_zone = evidence.update(detections)
         sm.update(train_present=train_present, train_in_zone=train_in_zone)
+        if train_present:
+            last_train_frame = frame_idx
         stats["accepted"] += 1
         stats["states"][sm.state.value] += 1
         if train_present:
@@ -159,6 +163,12 @@ def process(video_path, cfg: SiteConfig, conn=None, artifacts_dir=None,
                 snap_path = site_dir / f"event_{video_id}_{frame_idx}_{v.track_id}.jpg"
                 clip_path = site_dir / f"clip_{video_id}_{frame_idx}_{v.track_id}.mp4"
                 annotated = _draw_overlay(frame.copy(), detections, cfg, sm.state, {v.track_id})
+                if not train_present and last_train_frame is not None:
+                    ago = (frame_idx - last_train_frame) / fps
+                    cv2.putText(annotated,
+                                f"TRAIN PASSED {ago:.1f}s AGO - CROSSING NOT YET CLEARED",
+                                (12, height - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.75,
+                                (0, 215, 255), 2, cv2.LINE_AA)
                 cv2.imwrite(str(snap_path), annotated)
                 rel = lambda p: str(p.relative_to(artifacts_dir))
                 dbmod.insert_event(conn, video_id, cfg.site_id, v.track_id, v.cls,
