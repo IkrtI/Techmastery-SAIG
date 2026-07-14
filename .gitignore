@@ -1,0 +1,10 @@
+dataset/
+*.DS_Store
+data/
+.env
+node_modules/
+__pycache__/
+*.pt
+.venv/
+.next/
+chroma/
