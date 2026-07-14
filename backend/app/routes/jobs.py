@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from pydantic import BaseModel
@@ -12,7 +13,7 @@ JOBS = {}  # job_id -> {"status": ..., "detail": ...}
 class JobRequest(BaseModel):
     video: str          # absolute path or path under dataset/
     site: str           # site config name, e.g. "kmitl"
-    max_seconds: float | None = None
+    max_seconds: Optional[float] = None
 
 
 def _run_job(job_id: str, video_path: Path, site_cfg_path: Path, max_seconds, db_conn):
