@@ -1,0 +1,13 @@
+{
+  "site_id": "ram",
+  "name": "ทางตัดรถไฟถนนรามคำแหง",
+  "video_file": "Ram Train.mp4",
+  "stop_line": [[380, 520], [1020, 440]],
+  "danger_zone": [[100, 620], [1120, 300], [1180, 360], [220, 710]],
+  "frame_stride": 3,
+  "train_conf": 0.35,
+  "vehicle_conf": 0.4,
+  "warning_frames": 8,
+  "clear_frames": 45,
+  "watch_classes": ["person", "bicycle", "car", "motorcycle", "bus", "truck"]
+}

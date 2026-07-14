@@ -1,0 +1,13 @@
+{
+  "site_id": "kmitl",
+  "name": "ทางตัดรถไฟหน้า สจล. (KMITL)",
+  "video_file": "KMITL Train.mp4",
+  "stop_line": [[540, 510], [1060, 490]],
+  "danger_zone": [[300, 380], [1100, 380], [1100, 470], [300, 470]],
+  "frame_stride": 3,
+  "train_conf": 0.35,
+  "vehicle_conf": 0.4,
+  "warning_frames": 8,
+  "clear_frames": 45,
+  "watch_classes": ["person", "bicycle", "car", "motorcycle", "bus", "truck"]
+}
