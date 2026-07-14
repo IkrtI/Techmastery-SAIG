@@ -41,6 +41,9 @@ def train_signal(detections, cfg):
             present = True
             in_zone = in_zone or intersects
         elif intersects and width >= cfg.train_min_width:
+            max_bottom = getattr(cfg, "train_max_bottom_y", 0)
+            if max_bottom and d.xyxy[3] > max_bottom:
+                continue  # wide but close to camera → road vehicle, not rolling stock
             present = True
             in_zone = True
     return present, in_zone

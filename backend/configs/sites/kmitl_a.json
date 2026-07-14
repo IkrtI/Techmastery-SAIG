@@ -3,7 +3,7 @@
   "name": "ทางตัดรถไฟหน้า สจล. (มุมพื้นดิน)",
   "video_file": "KMITL Train.mp4",
   "stop_line": [[540, 510], [1060, 490]],
-  "danger_zone": [[300, 380], [1100, 380], [1100, 470], [300, 470]],
+  "danger_zone": [[80, 425], [700, 420], [1240, 435], [1240, 485], [700, 470], [80, 475]],
   "frame_stride": 3,
   "train_conf": 0.35,
   "vehicle_conf": 0.4,
@@ -15,7 +15,7 @@
   "scene_match_min": 0.0,
   "match_band": 0.15,
   "gap_reset_frames": 60,
-  "start_sec": 285,
+  "start_sec": 296,
   "end_sec": 410,
   "watch_classes": ["person", "bicycle", "car", "motorcycle", "bus", "truck"]
 }

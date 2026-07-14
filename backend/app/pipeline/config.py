@@ -20,6 +20,10 @@ class SiteConfig:
     # side-on as containers need ["train","truck"]; passenger-train sites keep
     # ["train"] so buses/trucks crossing the zone can't re-arm the state.
     rail_classes: list = field(default_factory=lambda: ["train", "truck", "bus"])
+    # 0 = off. When set, truck/bus-as-train evidence only counts if the box
+    # bottom sits above this y — separates distant rolling stock from wide
+    # road vehicles close to the camera (which sit lower in the frame).
+    train_max_bottom_y: int = 0
     warning_frames: int = 8   # consecutive train frames before WARNING
     clear_frames: int = 45    # frames without train before back to IDLE
     # scene matching: handheld videos wander between viewpoints; only frames
