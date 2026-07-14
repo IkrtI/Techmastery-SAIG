@@ -13,6 +13,7 @@ SCHEMA = """
 CREATE TABLE IF NOT EXISTS videos(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     site_id TEXT NOT NULL,
+    segment TEXT DEFAULT '',
     file TEXT NOT NULL,
     processed_at TEXT,
     frames INTEGER,
@@ -45,10 +46,10 @@ def connect(db_path=None) -> sqlite3.Connection:
     return conn
 
 
-def insert_video(conn, site_id, file, fps=None, frames=None, status="processing"):
+def insert_video(conn, site_id, file, fps=None, frames=None, status="processing", segment=""):
     cur = conn.execute(
-        "INSERT INTO videos(site_id, file, fps, frames, status) VALUES (?,?,?,?,?)",
-        (site_id, file, fps, frames, status),
+        "INSERT INTO videos(site_id, segment, file, fps, frames, status) VALUES (?,?,?,?,?,?)",
+        (site_id, segment, file, fps, frames, status),
     )
     conn.commit()
     return cur.lastrowid

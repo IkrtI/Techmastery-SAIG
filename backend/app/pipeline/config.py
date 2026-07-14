@@ -11,6 +11,7 @@ class SiteConfig:
     video_file: str
     stop_line: list          # [[x1, y1], [x2, y2]] in pixel coords
     danger_zone: list        # polygon [[x, y], ...] around the tracks
+    segment: str = ""        # config-file stem; set by load_site_config
     frame_stride: int = 2
     train_conf: float = 0.35
     vehicle_conf: float = 0.4
@@ -35,4 +36,5 @@ class SiteConfig:
 
 def load_site_config(path) -> SiteConfig:
     data = json.loads(Path(path).read_text())
+    data.setdefault("segment", Path(path).stem)
     return SiteConfig(**data)

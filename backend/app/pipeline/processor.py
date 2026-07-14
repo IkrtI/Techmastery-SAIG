@@ -90,7 +90,8 @@ def process(video_path, cfg: SiteConfig, conn=None, artifacts_dir=None,
         end_frame = min(end_frame, start_frame + int(max_seconds * fps))
     max_frames = end_frame
 
-    video_id = dbmod.insert_video(conn, cfg.site_id, Path(video_path).name, fps=fps)
+    video_id = dbmod.insert_video(conn, cfg.site_id, Path(video_path).name, fps=fps,
+                                  segment=cfg.segment)
 
     detector = detector or Detector()
     sm = CrossingStateMachine(cfg.warning_frames, cfg.clear_frames)
