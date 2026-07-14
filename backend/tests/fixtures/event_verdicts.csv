@@ -1,0 +1,44 @@
+event_id,segment,cls,ts_sec,verdict,note
+1,asok_a,motorcycle,151.8,TP,moto crosses stop line while train occupies corridor
+2,asok_b,bus,503.9,FP,train carriage itself tracked as bus crossing the line
+3,asok_b,motorcycle,506.0,TP,rider crossing beside passing train
+4,donmueang_a,person,105.8,TP,pedestrian crosses while loco passes
+5,donmueang_a,person,111.4,TP,pedestrian crosses while train passes behind barrier
+6,kmitl_a,person,305.5,FP,traffic officer walking along closed area
+7,kmitl_a,motorcycle,318.0,TP,rider crosses while container train passes
+8,kmitl_a,person,319.2,TP,person crosses during train passage
+9,kmitl_a,person,368.0,TP,rider (person box) crosses during train
+10,kmitl_a,motorcycle,368.6,TP,same violator moto box - dup pair with 9
+11,kmitl_a,motorcycle,386.4,TP,rider crosses during container train
+12,kmitl_a,motorcycle,400.3,TP,rider crosses during container train
+13,kmitl_a,person,402.1,TP,rider crosses during train tail
+14,kmitl_a,person,405.2,TP,crosser during train tail
+15,kmitl_a,person,406.1,TP,crosser during train tail
+16,kmitl_a,person,406.9,TP,crosser during train tail
+17,kmitl_a,motorcycle,407.5,TP,crosses within clearance window just after tail
+18,kmitl_a,motorcycle,407.9,TP,crosses within clearance window
+19,kmitl_a,motorcycle,409.7,TP,crosses within clearance window
+20,kmitl_b,person,962.1,FP,officer standing at barrier post
+21,kmitl_b,person,1028.2,FP,ambiguous person at zone edge - conservative call
+22,kmitl_b,person,1028.3,FP,ambiguous person mid zone - conservative call
+23,kmitl_b,motorcycle,1028.5,TP,rider sneaks along barrier during train
+24,kmitl_b,truck,1034.1,FP,queue-front pickup creeping over line
+25,kmitl_c,person,457.3,TP,rider enters crossing with barriers still down
+26,kmitl_c,motorcycle,457.5,TP,same violator moto box - dup pair with 25
+27,ram_b,motorcycle,822.1,TP,crosses rails as locomotive approaches
+28,ram_b,motorcycle,823.9,TP,crosses rails as locomotive approaches
+29,ram_b,motorcycle,824.9,TP,crosses rails as locomotive approaches
+30,ram_b,motorcycle,827.3,TP,crosses rails as train enters crossing
+31,ram_b,motorcycle,831.5,TP,crosses while train in crossing
+32,ram_b,car,844.9,TP,van crosses beyond line during train passage
+33,ram_b,motorcycle,846.0,TP,rider in zone during train tail
+34,ram_c,person,1208.8,TP,person crosses rails as train approaches station
+35,ram_c,motorcycle,1236.2,TP,rider crosses beside oncoming locomotive
+36,ram_c,motorcycle,1236.9,TP,rider crosses beside oncoming locomotive
+37,ram_c,person,1241.9,TP,person crosses next to moving carriages
+38,ram_c,motorcycle,1245.3,TP,rider crosses during train passage
+39,ram_c,motorcycle,1259.7,TP,rider crosses while green train passes
+40,ram_c,person,1263.5,TP,rider crosses while red train passes
+41,ram_c,motorcycle,1269.2,TP,surge across rails with barriers down at train tail
+42,ram_c,motorcycle,1269.4,TP,surge across rails with barriers down
+43,ram_c,person,1269.9,TP,surge across rails with barriers down

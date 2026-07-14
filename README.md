@@ -47,7 +47,7 @@
 - **CV:** ultralytics YOLO11s (COCO pretrained), ByteTrack, OpenCV — รันบน Apple Silicon MPS
 - **RAG:** PyMuPDF, sentence-transformers (multilingual MiniLM), numpy vector store, OpenRouter (Qwen3/Gemma/Llama fallback chain)
 - **Backend:** FastAPI + SQLite · **Frontend:** Next.js 16 + Tailwind + Recharts (ภาษาไทยทั้งระบบ)
-- **Eval:** hand-labeled ground truth + precision/recall/F1 (`notebooks/eval.ipynb`)
+- **Eval:** human-reviewed verdict ต่อ event — **precision 0.86 (37 TP / 6 FP จาก 43 เหตุการณ์, 4 จุดทางตัด)** + วิเคราะห์ recall เชิงคุณภาพ (`notebooks/eval.ipynb`)
 
 ## Run
 
