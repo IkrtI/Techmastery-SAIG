@@ -23,7 +23,7 @@ def _run_job(job_id: str, video_path: Path, site_cfg_path: Path, max_seconds, db
     try:
         JOBS[job_id]["status"] = "running"
         cfg = load_site_config(site_cfg_path)
-        video_id, n_events = process(video_path, cfg, conn=db_conn, max_seconds=max_seconds)
+        video_id, n_events, _stats = process(video_path, cfg, conn=db_conn, max_seconds=max_seconds)
         JOBS[job_id].update(status="done", video_id=video_id, events=n_events)
     except Exception as e:  # surfaced via GET /jobs/{id}
         JOBS[job_id].update(status="error", detail=str(e))

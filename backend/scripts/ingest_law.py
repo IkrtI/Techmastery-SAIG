@@ -29,6 +29,13 @@ def main():
     print("--- first 500 chars ---")
     print(text[:500])
     chunks = chunk_law_text(text)
+    # supplementary curated rail-crossing sections (the provided handbook
+    # does not include มาตรา 62/63 verbatim)
+    supplement = Path(__file__).resolve().parents[1] / "app" / "rag" / "supplement_rail_law.txt"
+    if supplement.exists():
+        extra = chunk_law_text(supplement.read_text())
+        print(f"supplement chunks: {len(extra)}")
+        chunks = extra + chunks
     print(f"--- {len(chunks)} chunks ---")
     for c in chunks[:5]:
         print(f"[{c.section or 'no-section'}] {c.text[:120]}...")

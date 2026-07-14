@@ -11,6 +11,7 @@ import numpy as np
 from .. import db as dbmod
 from .config import SiteConfig
 from .detector import Detector
+from .scene_match import SceneMatcher, grab_frame
 from .state_machine import CrossingStateMachine, State
 from .train_signal import train_signal
 from .violations import ViolationDetector
@@ -55,19 +56,24 @@ def _extract_clip(video_path, ts_sec, out_path, before=5, after=5):
 
 
 def _transcode_h264(src, dst):
+    # crf 28 keeps demo overlays small — the host disk is nearly full
     subprocess.run([FFMPEG, "-y", "-v", "error", "-i", str(src),
-                    "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
-                    "-an", str(dst)], check=False, capture_output=True)
+                    "-c:v", "libx264", "-preset", "veryfast", "-crf", "28",
+                    "-pix_fmt", "yuv420p", "-an", str(dst)],
+                   check=False, capture_output=True)
     Path(src).unlink(missing_ok=True)
 
 
 def process(video_path, cfg: SiteConfig, conn=None, artifacts_dir=None,
-            render=True, max_seconds=None, detector=None, progress_cb=None):
-    """Process one video; returns (video_id, n_events)."""
+            render=True, max_seconds=None, detector=None, progress_cb=None,
+            debug_dir=None):
+    """Process one video; returns (video_id, n_events, stats)."""
     conn = conn or dbmod.connect()
     artifacts_dir = Path(artifacts_dir or Path(__file__).resolve().parents[3] / "data" / "artifacts")
     site_dir = artifacts_dir / cfg.site_id
     site_dir.mkdir(parents=True, exist_ok=True)
+
+    matcher = SceneMatcher(grab_frame(video_path, cfg.ref_time), band=cfg.match_band)
 
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
@@ -76,7 +82,13 @@ def process(video_path, cfg: SiteConfig, conn=None, artifacts_dir=None,
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    max_frames = int(max_seconds * fps) if max_seconds else total
+    start_frame = int(cfg.start_sec * fps)
+    if start_frame:
+        cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+    end_frame = int(cfg.end_sec * fps) if cfg.end_sec else total
+    if max_seconds:
+        end_frame = min(end_frame, start_frame + int(max_seconds * fps))
+    max_frames = end_frame
 
     video_id = dbmod.insert_video(conn, cfg.site_id, Path(video_path).name, fps=fps)
 
@@ -93,8 +105,13 @@ def process(video_path, cfg: SiteConfig, conn=None, artifacts_dir=None,
                                  out_fps, (width, height))
 
     n_events = 0
-    frame_idx = -1
+    frame_idx = start_frame - 1
     pending_clips = []
+    skip_streak = 0
+    scene_lost = False
+    stats = {"considered": 0, "accepted": 0, "restricted": 0, "train_frames": 0,
+             "states": {"idle": 0, "warning": 0, "active": 0}}
+    debug_count = 0
     while True:
         ok, frame = cap.read()
         if not ok or frame_idx + 1 >= max_frames:
@@ -103,9 +120,33 @@ def process(video_path, cfg: SiteConfig, conn=None, artifacts_dir=None,
         if frame_idx % cfg.frame_stride:
             continue
 
+        stats["considered"] += 1
+        if matcher.score(frame) < cfg.scene_match_min:
+            skip_streak += 1
+            if skip_streak >= cfg.gap_reset_frames and not scene_lost:
+                # camera wandered off — forget stale positions and cool down
+                vd.reset_positions()
+                sm.state = State.IDLE
+                scene_lost = True
+            continue
+        if scene_lost:
+            vd.reset_positions()
+            scene_lost = False
+        skip_streak = 0
+
         detections = detector.track(frame)
         train_present, train_in_zone = train_signal(detections, cfg)
         sm.update(train_present=train_present, train_in_zone=train_in_zone)
+        stats["accepted"] += 1
+        stats["states"][sm.state.value] += 1
+        if train_present:
+            stats["train_frames"] += 1
+        if sm.is_restricted:
+            stats["restricted"] += 1
+        if debug_dir and stats["accepted"] % 100 == 1:
+            debug_count += 1
+            dbg = _draw_overlay(frame.copy(), detections, cfg, sm.state, set())
+            cv2.imwrite(str(Path(debug_dir) / f"dbg_{cfg.site_id}_{frame_idx}.jpg"), dbg)
 
         new_event_ids = set()
         ts_sec = frame_idx / fps
@@ -139,4 +180,4 @@ def process(video_path, cfg: SiteConfig, conn=None, artifacts_dir=None,
     for ts_sec, clip_path in pending_clips:
         _extract_clip(video_path, ts_sec, clip_path)
     dbmod.finish_video(conn, video_id, frames=frame_idx + 1, overlay=overlay_rel)
-    return video_id, n_events
+    return video_id, n_events, stats

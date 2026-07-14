@@ -18,6 +18,11 @@ class ViolationDetector:
         self._flagged = set()   # track_ids already reported this episode
         self._was_restricted = False
 
+    def reset_positions(self):
+        """Forget last-seen positions (call after scene gaps so stale points
+        can't fabricate a crossing when a track id reappears elsewhere)."""
+        self._last_point.clear()
+
     def observe(self, track_id, cls, point, frame, restricted) -> list:
         """Feed one tracked position; returns new Violations (0 or 1)."""
         # new restricted episode → allow tracks to be flagged again

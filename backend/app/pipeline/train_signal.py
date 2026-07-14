@@ -20,7 +20,9 @@ def _bbox_intersects_zone(xyxy, zone, samples=5):
     cy = (y1 + y2) / 2.0
     for i in range(samples):
         cx = x1 + (x2 - x1) * i / (samples - 1)
-        if point_in_polygon((cx, cy), zone):
+        # rolling stock rides above the rails: its box center can sit well
+        # above the danger zone, so probe the bottom edge (wheels) too
+        if point_in_polygon((cx, cy), zone) or point_in_polygon((cx, y2), zone):
             return True
     return False
 

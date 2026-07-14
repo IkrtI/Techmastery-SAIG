@@ -1,0 +1,20 @@
+{
+  "site_id": "kmitl",
+  "name": "ทางตัดรถไฟหน้า สจล. (มุมกว้างหน้าทางตัด)",
+  "video_file": "KMITL Train.mp4",
+  "stop_line": [[60, 590], [1260, 600]],
+  "danger_zone": [[0, 385], [1280, 410], [1280, 560], [0, 540]],
+  "frame_stride": 3,
+  "train_conf": 0.35,
+  "vehicle_conf": 0.4,
+  "train_min_width": 300,
+  "warning_frames": 8,
+  "clear_frames": 60,
+  "ref_time": 430,
+  "scene_match_min": 0.0,
+  "match_band": 0.15,
+  "gap_reset_frames": 60,
+  "start_sec": 415,
+  "end_sec": 500,
+  "watch_classes": ["person", "bicycle", "car", "motorcycle", "bus", "truck"]
+}

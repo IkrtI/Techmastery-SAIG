@@ -3,9 +3,12 @@ import os
 import time
 
 DEFAULT_MODELS = [
-    "deepseek/deepseek-chat-v3-0324:free",
-    "qwen/qwen3-235b-a22b:free",
-    "google/gemini-2.0-flash-exp:free",
+    "qwen/qwen3-next-80b-a3b-instruct:free",
+    "google/gemma-4-31b-it:free",
+    "meta-llama/llama-3.3-70b-instruct:free",
+    "nvidia/nemotron-3-super-120b-a12b:free",
+    "openai/gpt-oss-20b:free",
+    "nousresearch/hermes-3-llama-3.1-405b:free",
 ]
 
 
@@ -27,6 +30,8 @@ class LLMClient:
             self._client = OpenAI(
                 base_url="https://openrouter.ai/api/v1",
                 api_key=self.api_key,
+                timeout=45,
+                max_retries=0,  # we run our own retry/fallback loop
             )
         return self._client
 
@@ -51,6 +56,13 @@ class LLMClient:
                     status = getattr(e, "status_code", None)
                     if status in (401, 403):
                         raise
-                    time.sleep(1.5 * (attempt + 1))
+                    if status == 404:
+                        break  # model gone — no point retrying it
+                    retry_after = 0
+                    body = getattr(e, "body", None)
+                    if isinstance(body, dict):
+                        retry_after = (body.get("error", {}).get("metadata", {})
+                                       or {}).get("retry_after_seconds", 0) or 0
+                    time.sleep(min(float(retry_after) or 1.5 * (attempt + 1), 20))
             # try next model
         raise RuntimeError(f"all OpenRouter models failed: {last_err}")

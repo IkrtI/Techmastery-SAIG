@@ -8,7 +8,12 @@ from pathlib import Path
 
 import numpy as np
 
-DEFAULT_EMBED_MODEL = os.environ.get("RAILGUARD_EMBED_MODEL", "BAAI/bge-m3")
+# bge-m3 retrieves better but weighs 2.3 GB; MiniLM keeps the footprint small
+# on this disk-constrained machine. Override via RAILGUARD_EMBED_MODEL.
+DEFAULT_EMBED_MODEL = os.environ.get(
+    "RAILGUARD_EMBED_MODEL",
+    "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+)
 
 
 class VectorStore:
