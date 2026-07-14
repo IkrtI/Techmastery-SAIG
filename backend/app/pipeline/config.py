@@ -16,6 +16,10 @@ class SiteConfig:
     train_conf: float = 0.35
     vehicle_conf: float = 0.4
     train_min_width: int = 300  # px; wide truck/bus in zone counts as train evidence
+    # which classes may count as rolling stock. Sites where trains are seen
+    # side-on as containers need ["train","truck"]; passenger-train sites keep
+    # ["train"] so buses/trucks crossing the zone can't re-arm the state.
+    rail_classes: list = field(default_factory=lambda: ["train", "truck", "bus"])
     warning_frames: int = 8   # consecutive train frames before WARNING
     clear_frames: int = 45    # frames without train before back to IDLE
     # scene matching: handheld videos wander between viewpoints; only frames

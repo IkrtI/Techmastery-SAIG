@@ -12,7 +12,7 @@ Temporal hysteresis in CrossingStateMachine filters out remaining false hits.
 """
 from .geometry import point_in_polygon
 
-RAIL_CLASSES = ("train", "truck", "bus")
+DEFAULT_RAIL_CLASSES = ("train", "truck", "bus")
 
 
 def _bbox_intersects_zone(xyxy, zone, samples=5):
@@ -29,10 +29,11 @@ def _bbox_intersects_zone(xyxy, zone, samples=5):
 
 def train_signal(detections, cfg):
     """Returns (train_present, train_in_zone)."""
+    rail_classes = getattr(cfg, "rail_classes", None) or DEFAULT_RAIL_CLASSES
     present = False
     in_zone = False
     for d in detections:
-        if d.cls not in RAIL_CLASSES or d.conf < cfg.train_conf:
+        if d.cls not in rail_classes or d.conf < cfg.train_conf:
             continue
         width = d.xyxy[2] - d.xyxy[0]
         intersects = _bbox_intersects_zone(d.xyxy, cfg.danger_zone)

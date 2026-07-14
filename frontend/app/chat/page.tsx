@@ -6,6 +6,11 @@ import { apiPost } from "@/lib/api";
 interface Citation { section: string; text: string; score: number }
 interface Msg { role: "user" | "assistant"; text: string; citations?: Citation[] }
 
+function renderBold(text: string) {
+  const parts = text.split(/\*\*(.+?)\*\*/g);
+  return parts.map((p, i) => (i % 2 === 1 ? <strong key={i}>{p}</strong> : p));
+}
+
 const SUGGESTIONS = [
   "ฝ่าเครื่องกั้นทางรถไฟ โทษเท่าไหร่",
   "ขับรถผ่านทางรถไฟที่ไม่มีเครื่องกั้นต้องทำอย่างไร",
@@ -58,7 +63,7 @@ export default function Chat() {
           <div key={i} className={m.role === "user" ? "text-right" : ""}>
             <div className={`inline-block rounded-xl px-4 py-2.5 max-w-[85%] text-sm whitespace-pre-wrap text-left ${
               m.role === "user" ? "bg-accent2/20" : "bg-panel border border-border"}`}>
-              {m.text}
+              {renderBold(m.text)}
               {m.citations && m.citations.length > 0 && (
                 <div className="mt-2 pt-2 border-t border-border flex flex-wrap gap-1.5">
                   {m.citations.filter((c) => c.section).slice(0, 4).map((c, j) => (

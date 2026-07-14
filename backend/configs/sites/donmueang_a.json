@@ -8,6 +8,7 @@
   "train_conf": 0.35,
   "vehicle_conf": 0.4,
   "train_min_width": 300,
+  "rail_classes": ["train"],
   "warning_frames": 8,
   "clear_frames": 60,
   "ref_time": 70,
