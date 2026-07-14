@@ -11,8 +11,8 @@ import numpy as np
 from .. import db as dbmod
 from .config import SiteConfig
 from .detector import Detector
-from .geometry import point_in_polygon
 from .state_machine import CrossingStateMachine, State
+from .train_signal import train_signal
 from .violations import ViolationDetector
 
 STATE_COLORS = {
@@ -104,9 +104,8 @@ def process(video_path, cfg: SiteConfig, conn=None, artifacts_dir=None,
             continue
 
         detections = detector.track(frame)
-        trains = [d for d in detections if d.cls == "train" and d.conf >= cfg.train_conf]
-        train_in_zone = any(point_in_polygon(t.center, cfg.danger_zone) for t in trains)
-        sm.update(train_present=bool(trains), train_in_zone=train_in_zone)
+        train_present, train_in_zone = train_signal(detections, cfg)
+        sm.update(train_present=train_present, train_in_zone=train_in_zone)
 
         new_event_ids = set()
         ts_sec = frame_idx / fps

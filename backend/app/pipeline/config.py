@@ -14,6 +14,7 @@ class SiteConfig:
     frame_stride: int = 2
     train_conf: float = 0.35
     vehicle_conf: float = 0.4
+    train_min_width: int = 300  # px; wide truck/bus in zone counts as train evidence
     warning_frames: int = 8   # consecutive train frames before WARNING
     clear_frames: int = 45    # frames without train before back to IDLE
     watch_classes: list = field(default_factory=lambda: [
