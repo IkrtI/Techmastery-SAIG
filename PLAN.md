@@ -2,7 +2,7 @@
 
 Execution plan + live status. **Update checkboxes as work lands** (same commit as the work when possible). Contracts in `SPECS.md`, design in `DESIGN.md`.
 
-**Deadline:** 2 Aug 2026 · **Status:** core + bonus implemented; deploy in progress
+**Deadline:** 2 Aug 2026 · **Status:** deployed to https://saig.ikrt.dev — prod SSO pending client secret
 
 ## Requirement Traceability
 
@@ -94,11 +94,11 @@ Execution plan + live status. **Update checkboxes as work lands** (same commit a
 
 ## Phase 8 — Deploy (Dokploy)
 - [x] Multi-stage Dockerfile (SPECS §10)
-- [ ] Local `docker build` + run against compose Mongo
-- [ ] Dokploy project SAIG: MongoDB service + app; env/secrets set in Dokploy
-- [ ] Cloudflare DNS `saig.ikrt.dev` → server; Traefik host route; TLS verified
+- [ ] Local `docker build` + run against compose Mongo (skipped — no local Docker daemon; Dokploy remote build succeeded)
+- [x] Dokploy project SAIG: MongoDB service (`saig-mongo`) + app (`saig-app`, custom-git Dockerfile build); env set — `OIDC_CLIENT_SECRET` placeholder pending user paste
+- [x] Cloudflare: `saig.ikrt.dev` published on the Acer-PVE cloudflared tunnel → 192.168.1.161:3100 (host-published app port; Traefik routing unused on this server — see log); TLS at CF edge, `/api/health` 200 ✓
 - [ ] Prod SSO round-trip via `https://saig.ikrt.dev`
-- [ ] Seed prod (faculties + admin)
+- [x] Seed prod: ran `node server/dist/scripts/seed.js` in-container via one-off Dokploy schedule; faculty count verified > 0
 
 **Verify:** full manual E2E checklist (SPECS §9) on production URL.
 
@@ -118,3 +118,4 @@ Execution plan + live status. **Update checkboxes as work lands** (same commit a
 | 2026-07-16 | Design system finalized in Claude Design project; MoodFeed template + component library (tokens, Button, MoodCard, StatsBar, LivingBackground, MoodPicker, Dialog, …) ported to `client/src` as typed TSX + plain CSS |
 | 2026-07-16 | Phases 0–4 implemented; server suite green (30 tests: auth matrix incl. concurrent-refresh single winner, anonymity raw-JSON assertions, boundary-timestamp pagination, Bangkok half-open date ranges) |
 | 2026-07-16 | Phases 5–7 implemented: router+guards, single-flight refresh interceptor, filterStore↔URL, all pages, Swagger via zod-to-openapi. Stack deltas vs original SPECS: shadcn/ui → design-system port; Framer Motion → design-token CSS animations; RHF → direct Zod validation (SPECS updated). eslint deferred (config-protection hook) |
+| 2026-07-16 | Phase 8: deployed. Dokploy project SAIG (app p4mG7f7QIqok454KGYBbP + saig-mongo), image built from GitHub (repo made public). Origin is home server behind Cloudflare Tunnel — 443/80 closed, so Traefik routing 502s; switched to host-published port 3100 + tunnel public-hostname (matches how other services on this box are published). Prod health + SPA 200; seeded via one-off schedule. Remaining: user pastes OIDC_CLIENT_SECRET + SEED_ADMIN_EMAILS in Dokploy env → redeploy → prod SSO E2E |
