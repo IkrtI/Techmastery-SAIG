@@ -6,7 +6,7 @@ Authoritative technical contract. If code and this file disagree, fix one of the
 
 | Layer | Choice |
 |---|---|
-| Frontend | React + TypeScript, Vite, Tailwind CSS, shadcn/ui, Framer Motion, Zustand, TanStack Query, React Hook Form + Zod, axios |
+| Frontend | React + TypeScript, Vite, Tailwind CSS v4, design-system components ported from the Claude Design project (`client/src/components` + `styles/tokens.css`), Zustand, TanStack Query, Zod, axios, lucide-react. Motion = design-token CSS animations (no Framer Motion); forms = direct Zod validation (no RHF); no shadcn/ui |
 | Backend | Express + TypeScript (tsx dev / tsc build), Mongoose, Zod, jose (JWT + JWKS), helmet, express-rate-limit, cookie-parser |
 | Database | MongoDB 7 (docker compose dev / Dokploy prod) |
 | API docs | Swagger UI at `/api/docs` (zod-to-openapi) |
@@ -176,7 +176,7 @@ Admin accounts come only from `SEED_ADMIN_EMAILS` in MVP. User search and role m
 
 ## 6. Validation (shared shapes)
 
-Zod schemas defined once per route in `server/src/routes/*.schemas.ts`; FE duplicates only composer + onboarding shapes (`client/src/lib/schemas.ts`) for RHF:
+Zod schemas defined once in `server/src/routes/schemas.ts` (shared by route validation and the OpenAPI registry); FE duplicates only composer + onboarding shapes (`client/src/lib/schemas.ts`) for direct Zod form validation:
 
 - `moodType`: `z.enum(['happy','hyped','meh','tired','stressed','sad'])`
 - `text`: `z.string().trim().min(1).max(280)`
@@ -232,5 +232,5 @@ npm run seed -w server
 npm run test -w server   # single file: npm run test -w server -- moods.test.ts
 npm run test -w client
 npm run build            # both workspaces
-npm run lint             # eslint both
+# lint: deferred — eslint config creation blocked by config-protection hook
 ```
