@@ -12,12 +12,12 @@ Anonymous mood-sharing for KMITL students. Users post how they feel; the feed sh
 
 | Decision | Why |
 |---|---|
-| KMITL SSO (OIDC) instead of password auth | Real student identity guarantee, zero password liability; JWT requirement still met with first-party tokens |
+| KMITL SSO (OIDC) instead of password auth | Verifies control of a KMITL account and removes password liability; `studentId` is derived only from the verified email claim, while faculty/major/year remain self-reported |
 | First-party JWT after SSO (not Keycloak tokens in FE) | Full control over session lifetime, refresh rotation bonus, FE never touches Keycloak |
 | Fixed 6 mood types (not free-form) | Filterable, statable, colorable — powers the entire visualization layer |
 | Anonymity enforced at serialization | Impossible to leak identity by accident; not a UI convention but a server invariant |
 | Denormalized faculty/major/year on Mood | Feed/stats filter without joins; a mood is a snapshot at post time |
-| Faculty fixed list + major combobox | No authoritative major source exists; combobox converges user input into clean data |
+| Faculty fixed list + seeded major combobox | No authoritative major source exists; free entry is normalized for filtering but never mutates the shared suggestion list |
 | Cursor pagination | Stable + fast at hundreds of posts; infinite scroll UX |
 | Monorepo (client/ + server/), single container in prod | Clean dev separation, trivial deploy, same-origin cookies |
 
@@ -34,7 +34,7 @@ Anonymous mood-sharing for KMITL students. Users post how they feel; the feed sh
 
 Exact values are Tailwind theme tokens (`mood.happy.accent` etc.) — tune during build, keep the table in sync.
 
-**Living background:** feed page background = slow radial/linear gradient blended from the mood distribution of the *current filter result* (from `GET /api/stats/overview`). Dominant mood pulls the gradient toward its palette; transition ~2.5 s ease. Empty result → neutral base.
+**Living background:** feed page background = one slow radial/linear gradient selected from the dominant mood of the *current filter result* (from `GET /api/stats/overview`). Ties use the fixed mood order in `SPECS.md`; transition ~2.5 s ease. Empty result → neutral base. Distribution-weighted blending is deferred until the core flow is deployed.
 
 **Stats bar:** horizontal 6-segment proportion bar above the feed, same data. Segment click toggles that mood filter. Animated width changes (Framer Motion layout).
 
@@ -44,11 +44,11 @@ Exact values are Tailwind theme tokens (`mood.happy.accent` etc.) — tune durin
 2. **Onboarding** (one-time, forced while `onboarded=false`) — faculty dropdown → major combobox (suggestions = faculty's `knownMajors`, free entry allowed) → year select. Single card, one screen.
 3. **Feed** (home) — stats bar → mood cards (infinite scroll) → floating post button. Filter bar: faculty, major, mood, date range; collapses into a drawer on mobile. Living background behind everything.
 4. **My Moods** — own posts with edit/delete. Same card style + owner actions.
-5. **Admin** — tabs: **Moderation** (all posts, delete any) / **Users** (search, role toggle user↔admin).
+5. **Admin** — moderation queue showing all posts with delete-any controls. Admin accounts are bootstrapped from environment configuration; user/role management is out of scope.
 
 **Post composer:** dialog (desktop) / bottom sheet (mobile). Emoji row of 6 → selected mood tints the composer → text (280 char counter) → post. Spring bounce on emoji select.
 
-**Mood card:** large emoji, text, badge "คณะย่อ • ปี N", relative time ("5 นาทีที่แล้ว"), card tint by mood. Owner sees ⋯ menu (edit/delete). No names, ever.
+**Mood card:** large emoji, text, badge `faculty.slug • ปี N`, relative time ("5 นาทีที่แล้ว"), card tint by mood. Owner sees ⋯ menu (edit/delete). No names, ever.
 
 ## Motion Language (Framer Motion)
 
@@ -61,7 +61,7 @@ Exact values are Tailwind theme tokens (`mood.happy.accent` etc.) — tune durin
 ## Architecture Shape
 
 ```
-client/  React 19 + TS + Vite + Tailwind + shadcn/ui + Zustand + RHF/Zod + axios
+client/  React 19 + TS + Vite + Tailwind + shadcn/ui + Zustand + TanStack Query + RHF/Zod + axios
 server/  Express + TS: routes → controllers → services → models (Mongoose)
          middleware: requireAuth, requireOnboarded, requireAdmin, validate(zod)
          config: env parsing (zod), oidc client, db connect
@@ -69,9 +69,9 @@ MongoDB  docker compose (dev) / Dokploy service (prod)
 ```
 
 - Controllers thin, business logic in services, Mongoose only in models/services.
-- FE state: `authStore` (user, access token in memory, refresh orchestration), `filterStore` (feed filters ↔ URL params).
+- FE client state: `authStore` (user, access token in memory, refresh orchestration), `filterStore` (feed filters ↔ URL params). TanStack Query owns feed/stats server state and cursor pagination.
 - axios interceptor: 401 `TOKEN_EXPIRED` → single-flight refresh → retry queue.
 
 ## Out of Scope (decided)
 
-Dark mode, faculty heatmap, KDMC extra claims (faculty from SSO), realtime updates (websocket), i18n framework (UI copy Thai-first, hardcoded).
+Dark mode, faculty heatmap, KDMC extra claims (faculty from SSO), realtime updates (websocket), i18n framework (UI copy Thai-first, hardcoded), admin user/role management, refresh-token family reuse detection, user-mutated major suggestions, distribution-weighted background blending.

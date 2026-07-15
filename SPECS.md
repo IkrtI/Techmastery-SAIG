@@ -6,7 +6,7 @@ Authoritative technical contract. If code and this file disagree, fix one of the
 
 | Layer | Choice |
 |---|---|
-| Frontend | React + TypeScript, Vite, Tailwind CSS, shadcn/ui, Framer Motion, Zustand, React Hook Form + Zod, axios |
+| Frontend | React + TypeScript, Vite, Tailwind CSS, shadcn/ui, Framer Motion, Zustand, TanStack Query, React Hook Form + Zod, axios |
 | Backend | Express + TypeScript (tsx dev / tsc build), Mongoose, Zod, jose (JWT + JWKS), helmet, express-rate-limit, cookie-parser |
 | Database | MongoDB 7 (docker compose dev / Dokploy prod) |
 | API docs | Swagger UI at `/api/docs` (zod-to-openapi) |
@@ -20,7 +20,7 @@ Authoritative technical contract. If code and this file disagree, fix one of the
 │  └─ src/{routes, controllers, services, models, middleware, config, scripts}
 ├─ package.json            npm workspaces + concurrently
 ├─ docker-compose.yml      MongoDB (dev)
-└─ Dockerfile              multi-stage prod build (see §9)
+└─ Dockerfile              multi-stage prod build (see §10)
 ```
 
 ## 2. Environment Variables (`server/.env`)
@@ -38,6 +38,7 @@ Authoritative technical contract. If code and this file disagree, fix one of the
 | `JWT_SECRET` | 32+ random bytes | HS256 for first-party access tokens |
 | `ACCESS_TOKEN_TTL` | `15m` | |
 | `REFRESH_TOKEN_TTL_DAYS` | `15` | sliding |
+| `SEED_ADMIN_EMAILS` | `admin@kmitl.ac.th` | comma-separated KMITL allowlist; auth upsert assigns admin and seed syncs existing users without creating partial users |
 
 Env parsed and validated with Zod at boot (`config/env.ts`); crash fast on missing vars. `.env.example` mirrors this table.
 
@@ -50,7 +51,8 @@ Env parsed and validated with Zod at boot (`config/env.ts`); crash fast on missi
 | studentId | string | derived: email local part |
 | displayName | string | from SSO `name`; internal only |
 | faculty | ObjectId → Faculty | required after onboarding |
-| major | string | trimmed, collapsed whitespace; 1–100 chars |
+| major | string | display value: NFKC-normalized, trimmed, collapsed whitespace; 1–100 chars |
+| majorNormalized | string | internal filter key: `major.toLocaleLowerCase('en-US')`; never serialized |
 | year | number | int 1–8 |
 | role | enum `user` \| `admin` | default `user` |
 | onboarded | boolean | default false |
@@ -64,40 +66,42 @@ Env parsed and validated with Zod at boot (`config/env.ts`); crash fast on missi
 | text | string | 1–280 chars after trim |
 | faculty | ObjectId → Faculty | denormalized from author at create |
 | major | string | denormalized |
+| majorNormalized | string | denormalized internal filter key; never serialized |
 | year | number | denormalized |
 | timestamps | | `createdAt` = cursor + date filter |
 
-Indexes: `{faculty:1, createdAt:-1}`, `{moodType:1, createdAt:-1}`, `{author:1, createdAt:-1}`.
+Indexes: `{createdAt:-1, _id:-1}`, `{faculty:1, createdAt:-1, _id:-1}`, `{majorNormalized:1, createdAt:-1, _id:-1}`, `{moodType:1, createdAt:-1, _id:-1}`, `{author:1, createdAt:-1, _id:-1}`.
 
 ### Faculty
 | field | type |
 |---|---|
 | nameTh / nameEn | string |
 | slug | string, unique |
-| knownMajors | string[] — seed + appended on onboarding (case-insensitive dedupe) |
+| knownMajors | string[] — seed-managed canonical suggestions; onboarding never mutates this list |
 
 ### RefreshToken
 | field | type |
 |---|---|
 | user | ObjectId → User, indexed |
-| tokenHash | sha256 of token |
-| family | uuid — rotation chain id |
+| tokenHash | sha256 of token, unique |
 | expiresAt | Date (TTL index) |
 | revokedAt | Date? |
 
 ## 4. Auth
 
 ### Flow
-1. `GET /api/auth/login` → set `state` + PKCE verifier in short-lived (5 min) httpOnly cookie → 302 to Keycloak authorize (`response_type=code`, `scope=openid profile email`).
-2. `GET /api/auth/callback?code&state` → verify state → token exchange (code + client_secret + PKCE) → verify `id_token` via issuer JWKS (`jose`) → extract `email`, `name`.
-3. Upsert User by email. Issue tokens (below). 302 → `APP_URL` (`/onboarding` if `!onboarded`, else `/`).
-4. FE calls `GET /api/auth/me` on load.
+1. `GET /api/auth/login` → set `state` + PKCE verifier + OIDC `nonce` in short-lived (5 min) httpOnly cookies → 302 to Keycloak authorize (`response_type=code`, `scope=openid profile email`, `nonce`).
+2. `GET /api/auth/callback?code&state` → verify state → token exchange (code + client_secret + PKCE) → verify `id_token` signature, issuer, audience, expiry, and nonce via issuer JWKS (`jose`) → extract `email`, `name`.
+3. Upsert User by email, assigning `role=admin` when the verified email is in `SEED_ADMIN_EMAILS`. Issue the refresh cookie only, then 302 → `APP_URL` (`/onboarding` if `!onboarded`, else `/`).
+4. FE calls `POST /api/auth/refresh` on load to bootstrap `{accessToken, user}`. `GET /api/auth/me` is an authenticated user re-fetch, never the bootstrap path.
+
+The verified claims prove control of a KMITL account, not faculty/year membership. Accept only lowercase-normalized `@kmitl.ac.th` emails. Derive `studentId` from the verified email local part; do not claim a stricter student-only guarantee until the real SSO client eligibility policy or student email format is confirmed during Phase 2 verification.
 
 ### Tokens
-- **Access:** JWT HS256, TTL 15 min, claims `{sub: userId, role, onboarded, iat, exp}`. Sent in JSON body of `/refresh` + `/me` bootstrap; FE stores in memory only; sent as `Authorization: Bearer`.
-- **Refresh:** 256-bit random, TTL 15 days **sliding** (each rotation issues fresh 15-day expiry). Cookie: `httpOnly; SameSite=Lax; Path=/api/auth; Secure` (prod). DB stores sha256 hash + family.
-- **Rotation:** every `POST /api/auth/refresh` invalidates the presented token and issues a new one in the same family. **Reuse detection:** presenting a revoked/unknown token of a known family → revoke entire family (all sessions of that chain), 401.
-- `POST /api/auth/logout` → revoke family, clear cookie, return Keycloak logout URL (`id_token_hint`, `post_logout_redirect_uri=APP_URL`) for FE to redirect to.
+- **Access:** JWT HS256, TTL 15 min, claims `{sub: userId, role, onboarded, iat, exp}`. Returned only by `/refresh`; FE stores it in memory and sends it as `Authorization: Bearer`.
+- **Refresh:** 256-bit random, TTL 15 days **sliding** (each rotation issues a fresh 15-day expiry). Cookie: `httpOnly; SameSite=Lax; Path=/api/auth; Secure` (prod). DB stores a unique sha256 hash.
+- **Rotation:** every `POST /api/auth/refresh` atomically consumes the presented unrevoked, unexpired token (conditional update on its hash) before issuing a new token, so concurrent replay has at most one winner. A known revoked token—including a losing concurrent request—returns 401 without `Set-Cookie`, preventing it from clearing the winner's new cookie. Expired or unknown tokens return 401 and clear the cookie. Refresh-family tracking is out of scope.
+- `POST /api/auth/logout` → idempotently revoke the presented refresh token when found, clear the cookie, return 204 even when the cookie/token is absent or invalid. Ending the upstream Keycloak SSO session is out of scope for MVP.
 
 ### Middleware
 | name | behavior |
@@ -128,43 +132,45 @@ Base `/api`. All responses JSON. Errors: `{error: {code, message, details?}}`.
 | GET `/auth/login` | — | — | 302 Keycloak |
 | GET `/auth/callback` | — | `?code&state` | 302 APP_URL |
 | POST `/auth/refresh` | refresh cookie | — | `{accessToken, user}` |
-| POST `/auth/logout` | refresh cookie | — | `{logoutUrl}` |
+| POST `/auth/logout` | refresh cookie | — | 204 |
 | GET `/auth/me` | Bearer | — | `{user}` (id, email, studentId, faculty{...}, major, year, role, onboarded) |
-| PATCH `/auth/onboarding` | Bearer | `{facultyId, major, year}` | `{user}` — sets `onboarded=true`, appends major to faculty.knownMajors |
+| PATCH `/auth/onboarding` | Bearer | `{facultyId, major, year}` | `{user}` — normalizes major and sets `onboarded=true`; does not mutate faculty suggestions |
 
 ### Moods
 | method path | auth | in | out |
 |---|---|---|---|
-| GET `/moods` | Bearer+onboarded | query: `faculty?` (slug), `major?`, `moodType?`, `from?` `to?` (ISO date), `cursor?`, `limit?` (1–50, default 20) | `{items: MoodPublic[], nextCursor: string \| null}` |
+| GET `/moods` | Bearer+onboarded | query: `faculty?` (slug), `major?`, `moodType?`, `from?`, `to?` (ISO timestamps), `mine?` (boolean), `cursor?`, `limit?` (1–50, default 20) | `{items: MoodPublic[], nextCursor: string \| null}` |
 | POST `/moods` | Bearer+onboarded | `{moodType, text}` | `MoodPublic` (201) |
 | PATCH `/moods/:id` | Bearer+onboarded, owner | `{moodType?, text?}` | `MoodPublic` |
-| DELETE `/moods/:id` | Bearer+onboarded, owner **or admin** | — | 204 |
+| DELETE `/moods/:id` | Bearer+onboarded, owner | — | 204 |
 
 **MoodPublic** (the ONLY mood serializer): `{id, moodType, text, faculty: {slug, nameTh, nameEn}, major, year, createdAt, updatedAt, isMine}`. No author fields — anonymity invariant.
 
 **Cursor:** base64url of `{createdAt, id}`; query uses `$or [{createdAt: {$lt}}, {createdAt: eq, _id: {$lt}}]`, sort `{createdAt:-1, _id:-1}`. Invalid cursor → 400.
 
+`mine=true` adds `author=req.user.id`; the API never accepts an author ID from the client. `major` is normalized to `majorNormalized` before querying. Date ranges are half-open: `from` is inclusive (`$gte`) and `to` is exclusive (`$lt`), both transported as UTC ISO-8601 timestamps. The Thai date-picker converts the selected Asia/Bangkok start day and the day after the selected end day to UTC before requesting; require `from < to`.
+
 ### Stats
 | method path | auth | in | out |
 |---|---|---|---|
-| GET `/stats/overview` | Bearer+onboarded | same filter params as GET /moods (no cursor/limit) | `{total, counts: {happy, hyped, meh, tired, stressed, sad}}` |
+| GET `/stats/overview` | Bearer+onboarded | `faculty?`, `major?`, `moodType?`, `from?`, `to?`; no `mine`, cursor, or limit | `{total, counts: {happy, hyped, meh, tired, stressed, sad}}` |
 
 ### Meta
 | method path | auth | out |
 |---|---|---|
+| GET `/health` | — | `{status: 'ok'}` |
 | GET `/faculties` | Bearer | `[{id, slug, nameTh, nameEn, knownMajors}]` |
 
 ### Admin (Bearer + admin)
 | method path | in | out |
 |---|---|---|
-| GET `/admin/users` | `?search&cursor&limit` (search: email/studentId/major prefix) | `{items: [{id, email, studentId, displayName, faculty, major, year, role, createdAt}], nextCursor}` |
-| PATCH `/admin/users/:id/role` | `{role: 'user'\|'admin'}` | updated user; cannot demote self |
+| DELETE `/admin/moods/:id` | — | 204; moderation delete protected by `requireAdmin` |
 
-Moderation delete = `DELETE /moods/:id` as admin.
+Admin accounts come only from `SEED_ADMIN_EMAILS` in MVP. User search and role management endpoints are out of scope.
 
 ### Hardening
 - helmet defaults; CORS: dev allow `http://localhost:5173` with credentials, prod same-origin (no CORS needed).
-- Rate limit: 30 req/5 min per IP on POST/PATCH/DELETE `/moods`; 10 req/min on `/auth/refresh`.
+- Rate limit: 30 req/5 min per IP on POST/PATCH/DELETE `/moods` and DELETE `/admin/moods`; 10 req/min on `/auth/refresh`.
 - `app.set('trust proxy', 1)` (Cloudflare + Traefik).
 - Swagger UI `/api/docs` from zod-to-openapi registry (public in dev; behind admin in prod).
 
@@ -174,39 +180,40 @@ Zod schemas defined once per route in `server/src/routes/*.schemas.ts`; FE dupli
 
 - `moodType`: `z.enum(['happy','hyped','meh','tired','stressed','sad'])`
 - `text`: `z.string().trim().min(1).max(280)`
-- `major`: `z.string().trim().min(1).max(100)` (server also collapses inner whitespace)
+- `major`: `z.string().trim().min(1).max(100)`; server applies NFKC normalization, collapses inner whitespace, and derives `majorNormalized`
 - `year`: `z.coerce.number().int().min(1).max(8)`
 - `facultyId`: `z.string().refine(isValidObjectId)`
-- dates: `z.coerce.date()`; `from <= to` refinement
+- `mine`: `z.enum(['true','false']).transform(value => value === 'true')` — do not use `z.coerce.boolean()` for query strings
+- dates: `z.coerce.date()`; both or either may be supplied, but when both exist require `from < to`
 
 ## 7. Frontend Contracts
 
 - Routing: `/` feed, `/onboarding`, `/me`, `/admin`, `/login` (landing). Guards: unauthenticated → `/login`; `!onboarded` → `/onboarding`; `/admin` requires role admin.
 - `authStore` (Zustand): `{user, accessToken (memory only), status}`; boot = `POST /auth/refresh` (cookie) → hydrate.
-- axios instance: attaches Bearer; response interceptor on 401 `TOKEN_EXPIRED` → single-flight refresh → replay queued requests; refresh fail → logout to `/login`.
+- axios instance: attaches Bearer; response interceptor on 401 `TOKEN_EXPIRED` → single-flight refresh → replay queued requests; refresh fail → call idempotent `/auth/logout`, clear client state, then navigate to `/login`.
 - `filterStore`: `{faculty, major, moodType, from, to}` synced to URL search params (shareable filter links).
-- Feed data: infinite query keyed by filters; stats refetch on filter change + after own post.
+- TanStack Query owns feed/stats server state. Feed uses an infinite query keyed by normalized filters; stats refetch on filter change + after own post.
 
 ## 8. Seed (`server/src/scripts/seed.ts`)
 
 - Idempotent upsert by slug.
 - Faculties (best-effort public list — verify/adjust in seed file, not here):
   Engineering (วิศวกรรมศาสตร์), Architecture Art & Design (สถาปัตยกรรมฯ), Science (วิทยาศาสตร์), Industrial Education & Technology (ครุศาสตร์อุตสาหกรรมฯ), Agricultural Technology (เทคโนโลยีการเกษตร), Food Industry (อุตสาหกรรมอาหาร), Information Technology (เทคโนโลยีสารสนเทศ), KMITL Business School (บริหารธุรกิจ), Liberal Arts (ศิลปศาสตร์), Medicine (แพทยศาสตร์), Dentistry (ทันตแพทยศาสตร์), Nursing (พยาบาลศาสตร์), International Academy of Aviation Industry (วิทยาลัยอุตสาหกรรมการบินนานาชาติ), Advanced Manufacturing Innovation (วิทยาลัยนวัตกรรมการผลิตขั้นสูง), Music Science & Engineering (วิทยาลัยวิศวกรรมสังคีต), Prince of Chumphon Campus (วิทยาเขตชุมพร)
-- `knownMajors` seeded where confidently known (e.g. Engineering: Computer, Electrical, Mechanical, Civil, Chemical, Telecom/ECE, Software (SIIE), Robotics & AI, ...); combobox fills gaps organically.
-- Admin bootstrap: `SEED_ADMIN_EMAILS` env (comma-separated) → upsert role=admin.
+- `knownMajors` seeded where confidently known (e.g. Engineering: Computer, Electrical, Mechanical, Civil, Chemical, Telecom/ECE, Software (SIIE), Robotics & AI, ...); free-entry majors remain user data and never mutate this seed-managed list.
+- Admin allowlist: auth callback assigns `role=admin` to verified emails in `SEED_ADMIN_EMAILS`; the idempotent seed updates matching users that already exist but never creates incomplete User documents.
 
 ## 9. Testing Requirements
 
 Server (must pass before any phase is "done" in PLAN.md):
-- Auth: JWKS-mocked callback happy path; state mismatch → 400; refresh rotation; **reuse → family revoked**; expired access → `TOKEN_EXPIRED`.
-- RBAC matrix: user PATCH/DELETE other's mood → 403; admin DELETE any → 204; admin routes as user → 403; self-demote → 400/403.
-- Moods: create denormalizes faculty/major/year; serializer never contains `author`/`email` (assert on raw JSON); validation edges (empty text, 281 chars, bad moodType).
+- Auth: JWKS-mocked callback happy path; allowlisted email receives admin role; state mismatch → 400; nonce mismatch → 400; refresh rotation; two concurrent refreshes yield exactly one success and the loser has no `Set-Cookie`; replayed refresh → 401; expired/unknown refresh clears cookie; expired access → `TOKEN_EXPIRED`.
+- RBAC matrix: user PATCH/DELETE other's mood → 403; admin `DELETE /admin/moods/:id` → 204; admin route as user → 403.
+- Moods: create denormalizes faculty/major/majorNormalized/year; `mine=true` returns only the caller's posts; serializer never contains `author`/`email`/`studentId`/`displayName`/`majorNormalized` (assert on raw JSON); validation edges (empty text, 281 chars, bad moodType).
 - Pagination: stable order across pages, no dup/skip at boundary timestamps; invalid cursor → 400.
-- Stats: counts match seeded fixtures under each filter.
+- Filters/stats: major normalization matches canonical and case variants; half-open UTC ranges match Asia/Bangkok date selections; counts match seeded fixtures under each filter.
 
 Client (light): filterStore URL sync; interceptor single-flight refresh.
 
-Manual E2E before submission: real SSO login, onboarding, post/edit/delete, filters, admin moderation, mobile viewport.
+Manual E2E before submission: real SSO login, onboarding, post/edit/delete, My Moods, filters, admin moderation, mobile viewport.
 
 ## 10. Deployment (Dokploy @ 49.228.32.83, https://saig.ikrt.dev)
 

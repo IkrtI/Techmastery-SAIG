@@ -4,6 +4,24 @@ Execution plan + live status. **Update checkboxes as work lands** (same commit a
 
 **Deadline:** 2 Aug 2026 · **Status:** design done, implementation not started
 
+## Requirement Traceability
+
+| requirement | priority | phase | acceptance evidence |
+|---|---|---|---|
+| React + Express + MongoDB | Core | 0–1 | dev servers and MongoDB boot; healthcheck 200 |
+| KMITL identity + JWT | Core | 2 | real SSO callback, access-token middleware, refresh replay rejection |
+| Anonymous Mood CRUD | Core | 3 | raw JSON anonymity assertions + owner CRUD tests |
+| User/Admin RBAC | Core | 4 | user cannot mutate others; admin-only moderation delete succeeds |
+| Responsive calm UI | Core | 5–6 | complete mobile walkthrough at 375 px |
+| Faculty/major/mood/date filters + cursor pagination | Bonus | 3, 6 | filter fixtures; no duplicate/omitted boundary records |
+| Validation | Bonus | 1–3, 5–6 | server edge tests + client form errors |
+| State management | Bonus | 5 | Zustand client state + TanStack Query server state verified |
+| Living mood visualization + animation | Bonus | 6–7 | dominant-mood background, stats bar, reduced-motion walkthrough |
+| Swagger | Bonus | 7 | every implemented endpoint documented |
+| Deployment | Bonus | 8 | production SSO and full E2E at `https://saig.ikrt.dev` |
+
+**Explicitly deferred:** admin user/role management, refresh-token family reuse detection, user-mutated major suggestions, distribution-weighted background blending.
+
 ## Phase 0 — Scaffold
 - [ ] npm workspaces root (`client/`, `server/`), concurrently dev script
 - [ ] `client/`: Vite React TS + Tailwind + shadcn/ui init + path aliases
@@ -14,34 +32,36 @@ Execution plan + live status. **Update checkboxes as work lands** (same commit a
 **Verify:** `npm run dev` boots both; `/api/health` 200; Vite proxy works.
 
 ## Phase 1 — Server Foundation
-- [ ] Mongoose connect + models: User, Mood, Faculty, RefreshToken (SPECS §3, indexes included)
+- [ ] Mongoose connect + models: User, Mood, Faculty, RefreshToken (SPECS §3, cursor indexes included)
 - [ ] Central error middleware + error codes (SPECS §5) + `validate(schema)` middleware
-- [ ] Seed script: faculties + knownMajors + `SEED_ADMIN_EMAILS` (SPECS §8)
+- [ ] Seed script: faculties + knownMajors + existing-user role sync from `SEED_ADMIN_EMAILS`; never create partial users
 
 **Verify:** seed runs idempotently; model unit tests green.
 
 ## Phase 2 — Auth (SSO + JWT)
-- [ ] OIDC: login redirect (state+PKCE cookie), callback (exchange, JWKS verify, upsert)
+- [ ] Confirm the real KMITL SSO client eligibility policy; describe it accurately and do not infer student-only access from claims that provide only name/email
+- [ ] OIDC: login redirect (state+PKCE+nonce cookies), callback (exchange, JWKS + nonce verify, upsert + admin allowlist)
 - [ ] Access JWT issue/verify (`requireAuth`, `TOKEN_EXPIRED` path)
-- [ ] Refresh rotation + family reuse detection; sliding 15-day cookie
-- [ ] `/auth/me`, `/auth/logout` (Keycloak logout URL), `/auth/onboarding` (+knownMajors append)
+- [ ] Atomic refresh rotation + concurrent replay rejection; sliding 15-day cookie
+- [ ] `/auth/me`, app-session `/auth/logout`, `/auth/onboarding` (normalized major; seed suggestions remain immutable)
 - [ ] `requireOnboarded`, `requireAdmin`
-- [ ] Tests: SPECS §9 auth + RBAC matrix
+- [ ] Tests: SPECS §9 auth matrix, including admin allowlist, state/nonce mismatch, and exactly-one-winner concurrent refresh
 
 **Verify:** real SSO round-trip on localhost:3000 (manual); all auth tests green.
 
 ## Phase 3 — Moods + Stats API
 - [ ] CRUD with ownership checks, denormalization at create, MoodPublic serializer (+`isMine`)
-- [ ] Feed filters (faculty/major/moodType/date) + cursor pagination
+- [ ] `mine=true` server-owned filter for My Moods; never accept client-provided author IDs
+- [ ] Feed filters (faculty/normalized major/moodType/half-open UTC date range) + cursor pagination
 - [ ] `GET /stats/overview`; `GET /faculties`
 - [ ] Rate limiting on mutations; helmet; CORS dev config
 - [ ] Tests: SPECS §9 moods/pagination/stats/anonymity assertions
 
 **Verify:** all server tests green; manual curl of filter combos.
 
-## Phase 4 — Admin API
-- [ ] `GET /admin/users` (search + cursor), `PATCH /admin/users/:id/role` (no self-demote)
-- [ ] Admin delete-any-mood path covered by tests
+## Phase 4 — Admin Moderation
+- [ ] `DELETE /admin/moods/:id` protected by `requireAdmin`; admin accounts come from `SEED_ADMIN_EMAILS`
+- [ ] Admin delete-any-mood path covered by RBAC tests
 
 **Verify:** RBAC tests green.
 
@@ -49,6 +69,7 @@ Execution plan + live status. **Update checkboxes as work lands** (same commit a
 - [ ] Router + guards (`/login`, `/onboarding`, `/`, `/me`, `/admin`) per SPECS §7
 - [ ] authStore + boot refresh; axios interceptor single-flight refresh
 - [ ] filterStore ↔ URL params
+- [ ] TanStack Query client + feed/stats query keys; Zustand remains client-state only
 - [ ] Theme: mood tokens in Tailwind config (DESIGN palette)
 
 **Verify:** login → onboarding → feed redirect chain works against real BE.
@@ -57,13 +78,13 @@ Execution plan + live status. **Update checkboxes as work lands** (same commit a
 - [ ] Landing/Login (drifting gradient)
 - [ ] Onboarding (faculty dropdown, major combobox, year)
 - [ ] Feed: mood cards, infinite scroll, filter bar (mobile drawer), post composer (dialog/bottom sheet)
-- [ ] Living background + stats bar wired to `/stats/overview`
+- [ ] Dominant-mood living background + stats bar wired to `/stats/overview`
 - [ ] My Moods (edit/delete)
-- [ ] Admin (Moderation + Users tabs)
+- [ ] Admin moderation page (delete any mood; no user/role management)
 
 **Verify:** manual walkthrough all pages, mobile viewport (375px) included.
 
-## Phase 7 — Polish & Bonus Closure
+## Phase 7 — Polish & Bonus Closure (only after core production flow works)
 - [ ] Framer Motion pass (DESIGN motion language) + `prefers-reduced-motion`
 - [ ] Swagger UI `/api/docs` complete for every endpoint
 - [ ] Empty/loading/error states every page; Thai UI copy pass
@@ -81,7 +102,7 @@ Execution plan + live status. **Update checkboxes as work lands** (same commit a
 **Verify:** full manual E2E checklist (SPECS §9) on production URL.
 
 ## Phase 9 — Submission
-- [ ] README.md: setup, run, env table, screenshots, live URL, feature list vs requirements
+- [ ] README.md: setup, run, env table, screenshots, live URL, feature list vs requirements, and how KMITL SSO + onboarding satisfies registration without a password form
 - [ ] Final requirement coverage check (SPECS tables)
 - [ ] Tag release / final commit
 
@@ -92,3 +113,4 @@ Execution plan + live status. **Update checkboxes as work lands** (same commit a
 | date | note |
 |---|---|
 | 2026-07-15 | Design finalized; SSO client configured (3 redirect URIs); DESIGN/SPECS/PLAN split created |
+| 2026-07-15 | Contract tightened for MVP: added OIDC nonce, My Moods filter, normalized/date/index semantics, requirement traceability; deferred nonessential admin/auth complexity |
