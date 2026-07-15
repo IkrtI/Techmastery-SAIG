@@ -6,5 +6,9 @@ node_modules/
 __pycache__/
 *.pt
 .venv/
+.venv*/
+**/.venv*/
 .next/
 chroma/
+nohup.out
+*.log
