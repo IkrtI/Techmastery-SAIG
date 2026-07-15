@@ -1,0 +1,97 @@
+/* ============================================================
+   COMPONENT STYLES — ported verbatim from the design system JSX
+   (Button, LivingBackground, MoodCard, StatsBar). One class block
+   per component, prefix mm-*.
+   ============================================================ */
+
+/* --- Button ------------------------------------------------- */
+.mm-btn{--_h:44px;--_px:18px;--_fs:14px;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  height:var(--_h);padding:0 var(--_px);font-family:var(--font-sans);font-size:var(--_fs);font-weight:600;line-height:1;
+  border:0;border-radius:var(--radius-md);cursor:pointer;white-space:nowrap;user-select:none;text-decoration:none;
+  transition:background-color var(--dur-fast) var(--ease-out),transform var(--dur-fast) var(--ease-out),box-shadow var(--dur-fast) var(--ease-out);
+  -webkit-tap-highlight-color:transparent}
+.mm-btn:active{transform:scale(var(--press-scale))}
+.mm-btn:focus-visible{outline:none;box-shadow:var(--shadow-focus)}
+.mm-btn[disabled],.mm-btn[aria-disabled="true"]{opacity:.5;cursor:not-allowed;pointer-events:none}
+.mm-btn--sm{--_h:36px;--_px:12px;--_fs:13px}
+.mm-btn--lg{--_h:52px;--_px:26px;--_fs:16px}
+.mm-btn--full{width:100%}
+.mm-btn--primary{background:var(--primary);color:var(--primary-foreground)}
+.mm-btn--primary:hover{background:var(--primary-hover)}
+.mm-btn--secondary{background:var(--secondary);color:var(--secondary-foreground)}
+.mm-btn--secondary:hover{background:var(--secondary-hover)}
+.mm-btn--ghost{background:transparent;color:var(--text-body)}
+.mm-btn--ghost:hover{background:var(--accent-surface)}
+.mm-btn--outline{background:transparent;color:var(--text-body);box-shadow:inset 0 0 0 1px var(--border)}
+.mm-btn--outline:hover{background:var(--surface-muted)}
+.mm-btn--outline:focus-visible{box-shadow:inset 0 0 0 1px var(--border),var(--shadow-focus)}
+.mm-btn--destructive{background:var(--destructive);color:var(--destructive-foreground)}
+.mm-btn--destructive:hover{background:var(--destructive-hover)}
+.mm-btn__icon{display:inline-flex;flex:none;align-items:center}
+.mm-btn__icon svg{width:1.15em;height:1.15em;display:block}
+
+/* --- LivingBackground ---------------------------------------- */
+.mm-livingbg{overflow:hidden;background:var(--background)}
+.mm-livingbg--fixed{position:fixed;inset:0;z-index:-1}
+.mm-livingbg--absolute{position:absolute;inset:0}
+.mm-livingbg__layer{position:absolute;inset:0}
+.mm-livingbg__grad{position:absolute;inset:-8%}
+@keyframes mm-bg-in{from{opacity:0}to{opacity:1}}
+@keyframes mm-bg-drift{0%{transform:scale(1) translate(0,0)}50%{transform:scale(1.08) translate(-1.6%,-1.2%)}100%{transform:scale(1) translate(0,0)}}
+.mm-livingbg__layer--in{animation:mm-bg-in var(--dur-living-bg) var(--ease-in-out)}
+.mm-livingbg--drift .mm-livingbg__grad{animation:mm-bg-drift 26s var(--ease-in-out) infinite}
+.mm-livingbg__content{position:relative;z-index:1;height:100%}
+@media (prefers-reduced-motion: reduce){
+  .mm-livingbg__layer--in{animation:none}
+  .mm-livingbg--drift .mm-livingbg__grad{animation:none}
+}
+
+/* --- MoodCard ------------------------------------------------ */
+.mm-moodcard{position:relative;background:var(--_tint);border-radius:var(--radius-lg);padding:16px 18px;
+  color:var(--text-body);font-family:var(--font-sans);box-shadow:var(--shadow-sm);border:1px solid rgba(28,25,23,.05)}
+.mm-moodcard__top{display:flex;align-items:flex-start;gap:12px}
+.mm-moodcard__emoji{font-size:32px;line-height:1.1;flex:none}
+.mm-moodcard__time{margin-left:auto;font-size:13px;font-weight:500;color:var(--text-muted);white-space:nowrap;padding-top:5px}
+.mm-moodcard__text{margin:12px 0 14px;font-size:18px;line-height:var(--leading-relaxed);white-space:pre-wrap;overflow-wrap:anywhere}
+.mm-moodcard__foot{display:flex;align-items:center;gap:8px}
+.mm-moodcard__ctx{display:inline-flex;align-items:center;height:24px;padding:0 11px;border-radius:var(--radius-full);
+  background:rgba(255,255,255,.62);color:var(--text-muted);font-size:12px;font-weight:600;white-space:nowrap}
+.mm-moodcard__owner{position:relative;flex:none;margin-left:2px}
+.mm-moodcard__more{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:0;
+  border-radius:var(--radius-full);background:transparent;color:var(--text-muted);cursor:pointer;
+  transition:background-color var(--dur-fast) var(--ease-out)}
+.mm-moodcard__more:hover{background:rgba(28,25,23,.07)}
+.mm-moodcard__more:focus-visible{outline:none;box-shadow:var(--shadow-focus)}
+.mm-moodcard__more svg{width:18px;height:18px}
+.mm-moodcard__menuscrim{position:fixed;inset:0;z-index:19}
+.mm-moodcard__menu{position:absolute;top:38px;right:0;z-index:20;min-width:150px;padding:5px;background:var(--surface-card);
+  border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);
+  animation:mm-menu-in var(--dur-fast) var(--ease-out)}
+@keyframes mm-menu-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.mm-moodcard__mi{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;cursor:pointer;
+  padding:9px 10px;border-radius:var(--radius-sm);font-family:var(--font-sans);font-size:14px;font-weight:500;
+  color:var(--text-body);text-align:left;transition:background-color var(--dur-fast) var(--ease-out)}
+.mm-moodcard__mi:hover{background:var(--surface-muted)}
+.mm-moodcard__mi svg{width:16px;height:16px;flex:none}
+.mm-moodcard__mi.is-danger{color:var(--destructive)}
+.mm-moodcard__mi.is-danger:hover{background:var(--destructive-tint)}
+
+/* --- StatsBar ------------------------------------------------ */
+.mm-stats{font-family:var(--font-sans)}
+.mm-stats__bar{display:flex;gap:3px;height:16px;width:100%}
+.mm-stats__seg{border:0;height:100%;border-radius:var(--radius-full);cursor:pointer;padding:0;flex-basis:0;min-width:6px;
+  transition:flex-grow var(--dur-base) var(--ease-out),opacity var(--dur-fast) var(--ease-out),transform var(--dur-fast) var(--ease-out)}
+.mm-stats__seg:hover{transform:scaleY(1.2)}
+.mm-stats__seg.is-dim{opacity:.32}
+.mm-stats__seg.is-active{box-shadow:0 0 0 2px var(--surface-card),0 0 0 3.5px currentColor}
+.mm-stats__seg:focus-visible{outline:none;box-shadow:var(--shadow-focus)}
+.mm-stats__empty{height:100%;width:100%;border-radius:var(--radius-full);background:var(--surface-muted)}
+.mm-stats__legend{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.mm-stats__leg{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:0;cursor:pointer;
+  border-radius:var(--radius-full);background:var(--surface-muted);color:var(--text-body);font-family:var(--font-sans);
+  font-size:13px;font-weight:600;transition:box-shadow var(--dur-fast) var(--ease-out),opacity var(--dur-fast) var(--ease-out)}
+.mm-stats__leg .mm-stats__cnt{color:var(--text-muted);font-variant-numeric:tabular-nums}
+.mm-stats__leg.is-zero{opacity:.45}
+.mm-stats__leg.is-on{box-shadow:inset 0 0 0 2px var(--_a)}
+.mm-stats__leg:focus-visible{outline:none;box-shadow:var(--shadow-focus)}
+@media (prefers-reduced-motion: reduce){.mm-stats__seg{transition:opacity var(--dur-fast)}.mm-stats__seg:hover{transform:none}}
