@@ -8,7 +8,7 @@ A community platform for KMITL students to share their current emotional state a
 
 ## Scope Strategy
 
-Core-first (option A): auth + mood CRUD + anonymity + RBAC done solidly, then bonuses in order of value. Explicitly cut: deployment (SSO redirect URI is bound to localhost; needs KDMC approval for a public URI), dark mode, faculty heatmap.
+Core-first (option A): auth + mood CRUD + anonymity + RBAC done solidly, then bonuses in order of value. Explicitly cut: dark mode, faculty heatmap.
 
 ## Tech Stack
 
@@ -42,7 +42,7 @@ SSO client: **Techmastery SAIG** (developer.kmitl.ac.th/console/sso/28)
 - Issuer: `https://sso.kmitl.ac.th/realms/kmitl` (Keycloak; discovery endpoint available)
 - Client ID: `vcspwnm2ib-7y26lbiwmzilwb7w51w78y3v7rg5lrfz.developer.kmitl.ac.th`
 - Client secret: `.env` only, never committed; `.env.example` provided
-- Registered redirect URIs: `http://localhost:3000`, `http://localhost:3000/api/auth/callback`
+- Registered redirect URIs: `http://localhost:3000`, `http://localhost:3000/api/auth/callback`, `https://saig.ikrt.dev/api/auth/callback`
 
 Flow:
 
@@ -163,6 +163,16 @@ Mood palette (calm, pastel):
 - **FE (light):** filter store, auth interceptor logic.
 - Manual E2E checklist before submission (real SSO login, post, filter, admin moderation).
 
+## Deployment
+
+Target: self-hosted Dokploy server (49.228.32.83) behind Cloudflare, domain **https://saig.ikrt.dev**.
+
+- **Single container in production:** multi-stage Dockerfile — build `client/` (Vite) → build `server/` (tsc) → Express serves API + client static from `client/dist` with SPA fallback. Single origin: no CORS, first-party cookies (`secure: true`).
+- **MongoDB:** Dokploy MongoDB service in a new Dokploy project "SAIG"; connection string via env.
+- **TLS/routing:** Cloudflare in front; Traefik on Dokploy routes `saig.ikrt.dev` → app container port 3000.
+- Env split: `OIDC_REDIRECT_URI` / `APP_URL` differ between local and prod. All secrets via Dokploy env, never in the image.
+- Express sets `trust proxy` (behind Cloudflare + Traefik) so secure cookies and rate limiting see real client IPs.
+
 ## Requirement Coverage
 
 | Req | Status |
@@ -182,4 +192,4 @@ Mood palette (calm, pastel):
 | Animation (bonus) | ✓ Framer Motion |
 | Architecture (bonus) | ✓ routes/controllers/services/models |
 | Creativity (bonus) | ✓ living background + stats bar |
-| Deployment (bonus) | ✗ cut (redirect URI localhost-only) |
+| Deployment (bonus) | ✓ Dokploy + Cloudflare → https://saig.ikrt.dev |
