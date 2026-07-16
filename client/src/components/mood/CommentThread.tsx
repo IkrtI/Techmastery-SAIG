@@ -49,7 +49,10 @@ export function CommentThread({ postId, lang }: { postId: string; lang: Lang }) 
   return (
     <div className="mm-comments">
       {comments.isLoading ? (
-        <p className="mm-comments__note">{t('loading', lang)}</p>
+        <div className="mm-comments__skel" aria-hidden="true">
+          <span />
+          <span />
+        </div>
       ) : comments.isError ? (
         <p className="mm-alert" role="alert">
           {apiErrorMessage(comments.error, t('errorGeneric', lang))}

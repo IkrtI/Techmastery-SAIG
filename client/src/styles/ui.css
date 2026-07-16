@@ -11,6 +11,9 @@
 @keyframes rgSheetIn{from{transform:translateY(100%)}to{transform:translateY(0)}}
 @keyframes rgLoadBar{0%{transform:translateX(-120%)}100%{transform:translateX(320%)}}
 @keyframes rgSpin{to{transform:rotate(360deg)}}
+@keyframes rgPopIn{from{opacity:0;transform:translateY(-4px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes rgModalIn{from{opacity:0;transform:translate(-50%,-50%) scale(.96)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@keyframes rgFadeIn{from{opacity:0}to{opacity:1}}
 
 /* --- Touch & focus baseline (UX pass) ------------------------------------------------ */
 .mm-btn,.mm-chip,.mm-seg__opt,.mm-nav__item,.mm-bottomnav__item,.mm-moodcard__kebab,.mm-logout,
@@ -22,16 +25,18 @@
 /* --- Buttons -------------------------------------------------- */
 .mm-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:var(--radius-md);
   border:none;font-family:var(--font-sans);font-size:14px;font-weight:600;line-height:1;cursor:pointer;white-space:nowrap;
-  transition:background var(--dur-fast) ease,border-color var(--dur-fast) ease,color var(--dur-fast) ease;-webkit-tap-highlight-color:transparent}
+  transition:background var(--dur-fast) ease,border-color var(--dur-fast) ease,color var(--dur-fast) ease,
+    transform 120ms ease,box-shadow var(--dur-fast) ease;-webkit-tap-highlight-color:transparent}
+.mm-btn:active{transform:scale(.97)}
 .mm-btn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:3px}
 .mm-btn[disabled]{opacity:.4;cursor:not-allowed;pointer-events:none}
-.mm-btn--primary{background:var(--primary);color:var(--primary-foreground)}
+.mm-btn--primary{background:var(--primary);color:var(--primary-foreground);box-shadow:var(--shadow-chip)}
 .mm-btn--primary:hover{background:var(--primary-hover)}
 .mm-btn--info{background:var(--info);color:var(--on-info)}
 .mm-btn--info:hover{background:var(--info-hover)}
-.mm-btn--outline{background:transparent;border:1px solid var(--border);color:var(--text-secondary)}
+.mm-btn--outline{background:var(--surface-card);border:1px solid var(--border-strong);color:var(--text-secondary);box-shadow:var(--shadow-chip)}
 .mm-btn--outline:hover{border-color:var(--info);color:var(--text-body)}
-.mm-btn--danger{background:transparent;border:1px solid var(--destructive-border);color:var(--destructive)}
+.mm-btn--danger{background:var(--surface-card);border:1px solid var(--destructive-border);color:var(--destructive);box-shadow:var(--shadow-chip)}
 .mm-btn--danger:hover{background:var(--destructive-tint)}
 .mm-btn--danger-solid{background:var(--destructive);color:#fff}
 .mm-btn--ghost{background:transparent;color:var(--text-muted)}
@@ -43,7 +48,7 @@
 /* --- Inputs ---------------------------------------------------- */
 .mm-input,.mm-select > select,.mm-ta__field{width:100%;box-sizing:border-box;padding:11px 12px;border-radius:var(--radius-md);
   background:var(--surface-inset);border:1px solid var(--border);color:var(--text-body);font-family:var(--font-sans);font-size:14px;
-  outline:none;transition:border-color var(--dur-fast) ease}
+  outline:none;box-shadow:var(--shadow-chip);transition:border-color var(--dur-fast) ease,box-shadow var(--dur-fast) ease}
 .mm-input::placeholder,.mm-ta__field::placeholder{color:var(--text-subtle)}
 .mm-input:focus,.mm-select > select:focus,.mm-ta__field:focus{border-color:var(--info)}
 .mm-input[disabled],.mm-select > select[disabled]{opacity:.5;cursor:not-allowed}
@@ -59,7 +64,7 @@
 .mm-label--xs{font-size:11px;color:var(--text-muted)}
 
 /* --- Segmented (lang toggle) ------------------------------------ */
-.mm-seg{display:inline-flex;align-items:center;gap:3px;padding:3px;border:1px solid var(--border);border-radius:var(--radius-full)}
+.mm-seg{display:inline-flex;align-items:center;gap:3px;padding:3px;border:1px solid var(--border);border-radius:var(--radius-full);background:var(--surface-inset);box-shadow:var(--shadow-chip)}
 .mm-seg__opt{padding:5px 11px;border-radius:var(--radius-full);border:none;background:transparent;color:var(--text-muted);
   font-family:var(--font-sans);font-size:11px;font-weight:600;cursor:pointer;transition:all var(--dur-fast) ease}
 .mm-seg__opt.is-active{background:var(--seg-active-bg);color:var(--seg-active-fg)}
@@ -67,8 +72,10 @@
 
 /* --- Theme icon button -------------------------------------------- */
 .mm-themebtn{width:34px;height:34px;flex:none;display:inline-flex;align-items:center;justify-content:center;
-  border:1px solid var(--border);border-radius:var(--radius-full);background:transparent;color:var(--text-muted);
-  cursor:pointer;touch-action:manipulation;transition:color var(--dur-fast) ease,border-color var(--dur-fast) ease}
+  border:1px solid var(--border);border-radius:var(--radius-full);background:var(--surface-inset);color:var(--text-muted);
+  box-shadow:var(--shadow-chip);cursor:pointer;touch-action:manipulation;
+  transition:color var(--dur-fast) ease,border-color var(--dur-fast) ease,transform 120ms ease}
+.mm-themebtn:active{transform:scale(.94)}
 .mm-themebtn:hover{color:var(--text-body);border-color:var(--border-strong)}
 .mm-themebtn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 .mm-themebtn svg{width:16px;height:16px}
@@ -77,7 +84,7 @@
 .mm-menu{position:relative;flex:none}
 .mm-menu__panel{position:absolute;right:0;top:calc(100% + 8px);z-index:60;min-width:200px;padding:6px;
   background:var(--surface-card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-modal);
-  display:flex;flex-direction:column;gap:2px}
+  display:flex;flex-direction:column;gap:2px;animation:rgPopIn 160ms ease-out both;transform-origin:top right}
 .mm-menu__row{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:10px 12px;
   border:none;background:transparent;border-radius:var(--radius-sm);cursor:pointer;font-family:var(--font-sans);
   font-size:13.5px;font-weight:600;color:var(--text-body);text-align:left;touch-action:manipulation;
@@ -92,8 +99,9 @@
 
 /* --- Mood chip (dot + label [+count]) ---------------------------- */
 .mm-chip{display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:var(--radius-full);border:1px solid var(--border);
-  background:transparent;color:var(--text-secondary);font-family:var(--font-sans);font-size:12px;font-weight:600;cursor:pointer;
-  transition:all var(--dur-fast) ease}
+  background:var(--surface-inset);color:var(--text-secondary);font-family:var(--font-sans);font-size:12px;font-weight:600;cursor:pointer;
+  box-shadow:var(--shadow-chip);transition:all var(--dur-fast) ease}
+.mm-chip:active{transform:scale(.96)}
 .mm-chip.is-active{background:var(--_soft);border-color:var(--_accent);color:var(--text-body)}
 .mm-chip:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 .mm-chip__dot{width:7px;height:7px;border-radius:var(--radius-full);background:var(--_accent);flex:none}
@@ -173,6 +181,12 @@
 
 /* --- Mood card ------------------------------------------------------------- */
 .mm-moodcard{position:relative;padding:15px 16px;display:flex;flex-direction:column;gap:10px;animation:rgCardIn var(--dur-card) ease-out both}
+.mm-stack > .mm-moodcard:nth-child(1){animation-delay:0ms}
+.mm-stack > .mm-moodcard:nth-child(2){animation-delay:40ms}
+.mm-stack > .mm-moodcard:nth-child(3){animation-delay:80ms}
+.mm-stack > .mm-moodcard:nth-child(4){animation-delay:120ms}
+.mm-stack > .mm-moodcard:nth-child(5){animation-delay:160ms}
+.mm-stack > .mm-moodcard:nth-child(6){animation-delay:200ms}
 .mm-moodcard__top{display:flex;align-items:center;gap:10px}
 .mm-moodcard__avatar{width:34px;height:34px;border-radius:var(--radius-full);background:var(--_soft);display:flex;align-items:center;
   justify-content:center;flex:none}
@@ -187,7 +201,8 @@
 .mm-moodcard__text{margin:0;font-size:14.5px;line-height:1.55;color:var(--text-body);text-wrap:pretty;white-space:pre-wrap;overflow-wrap:anywhere}
 .mm-moodcard__kebabwrap{position:relative;flex:none}
 .mm-moodcard__menu{position:absolute;right:0;top:calc(100% + 6px);z-index:30;min-width:150px;display:flex;flex-direction:column;gap:6px;
-  padding:8px;background:var(--surface-card);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-modal)}
+  padding:8px;background:var(--surface-card);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-modal);
+  animation:rgPopIn 160ms ease-out both;transform-origin:top right}
 .mm-moodcard__menu .mm-btn{justify-content:center}
 .mm-moodcard__confirmq{font-size:12.5px;color:var(--text-secondary);text-align:center;padding:2px 0}
 
@@ -198,11 +213,16 @@
   font-size:12px;font-weight:600;cursor:pointer;touch-action:manipulation;box-shadow:var(--shadow-chip);transition:all var(--dur-fast) ease}
 .mm-react:hover{color:var(--text-body);border-color:var(--text-subtle);background:var(--surface-muted);box-shadow:0 2px 6px rgba(0,0,0,0.18)}
 .mm-react:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.mm-react:active{transform:scale(.94)}
 .mm-react.is-active{border-color:var(--_rc);color:var(--text-body);background:color-mix(in srgb, var(--_rc) 14%, transparent)}
 .mm-react__emoji{font-size:16px;line-height:1;flex:none}
 .mm-react__count{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:11px;color:var(--text-muted)}
 .mm-react[disabled]{opacity:.6;cursor:default}
-.mm-comments{display:flex;flex-direction:column;gap:10px;padding-top:10px;border-top:1px solid var(--border)}
+.mm-comments{display:flex;flex-direction:column;gap:10px;padding-top:10px;border-top:1px solid var(--border);animation:rgCardIn 220ms ease-out both}
+.mm-comments__skel{display:flex;flex-direction:column;gap:8px;animation:rgSkel 1.5s ease-in-out infinite}
+.mm-comments__skel span{display:block;height:12px;border-radius:4px;background:var(--surface-muted)}
+.mm-comments__skel span:nth-child(1){width:70%}
+.mm-comments__skel span:nth-child(2){width:45%}
 .mm-comments__note{margin:0;font-size:12.5px;color:var(--text-muted)}
 .mm-comments__list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
 .mm-comments__item{display:flex;align-items:flex-start;gap:10px}
@@ -277,11 +297,11 @@
 @media (max-width:767px){.mm-page--dock{padding-bottom:240px}}
 
 /* --- Modal / sheet / scrim --------------------------------------------------------- */
-.mm-scrim{position:fixed;inset:0;z-index:70;background:var(--scrim);backdrop-filter:blur(2px)}
+.mm-scrim{position:fixed;inset:0;z-index:70;background:var(--scrim);backdrop-filter:blur(2px);animation:rgFadeIn 180ms ease-out both}
 .mm-scrim--drawer{z-index:60;backdrop-filter:none;background:rgba(0,0,0,.6)}
 .mm-modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:71;width:calc(100% - 40px);max-width:460px;
   background:var(--surface-card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-modal);
-  padding:22px;display:flex;flex-direction:column;gap:16px}
+  padding:22px;display:flex;flex-direction:column;gap:16px;animation:rgModalIn 200ms var(--ease-spring, ease-out) both}
 .mm-sheet{position:fixed;left:0;right:0;bottom:0;z-index:71;background:var(--surface-card);border-top:1px solid var(--border);
   border-radius:var(--radius-xl) var(--radius-xl) 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));
   display:flex;flex-direction:column;gap:16px;animation:rgSheetIn var(--dur-sheet) ease-out}
@@ -330,6 +350,8 @@
   .mm-landing__glow,.mm-brand__dot,.mm-transit__dot{animation:none}
   .mm-moodcard{animation:none}
   .mm-sheet{animation:none}
+  .mm-menu__panel,.mm-moodcard__menu,.mm-scrim,.mm-modal,.mm-comments{animation:none}
+  .mm-btn:active,.mm-chip:active,.mm-react:active,.mm-themebtn:active{transform:none}
   .mm-glowlayer{transition:none}
   .mm-stats__seg{transition:none}
   .mm-chip--picker.is-active{transform:none}
