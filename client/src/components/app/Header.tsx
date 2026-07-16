@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { useLangStore, t, type Lang } from '@/lib/i18n';
+import { ProfileDialog } from '@/components/app/ProfileDialog';
 import { useThemeStore } from '@/stores/themeStore';
 import { logout } from '@/lib/api';
 import { useIsMobile } from '@/hooks/useIsMobile';
@@ -92,6 +93,7 @@ function HeaderMenu() {
   const mobile = useIsMobile();
   const links = useNavLinks(lang);
   const [open, setOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -148,6 +150,18 @@ function HeaderMenu() {
               <div className="mm-menu__divider" />
             </>
           )}
+          <button
+            type="button"
+            role="menuitem"
+            className="mm-menu__row"
+            onClick={() => {
+              setOpen(false);
+              setProfileOpen(true);
+            }}
+          >
+            {t('editProfile', lang)}
+          </button>
+          <div className="mm-menu__divider" />
           <button type="button" role="menuitem" className="mm-menu__row" onClick={() => setTheme(dark ? 'light' : 'dark')}>
             <span>{t('themeLabel', lang)}</span>
             <span className="mm-menu__val">
@@ -170,6 +184,7 @@ function HeaderMenu() {
           </button>
         </div>
       )}
+      {profileOpen && <ProfileDialog open lang={lang} onClose={() => setProfileOpen(false)} />}
     </div>
   );
 }
