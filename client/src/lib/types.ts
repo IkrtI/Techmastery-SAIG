@@ -19,7 +19,7 @@ export interface UserPublic {
   onboarded: boolean;
 }
 
-export const REACTION_TYPES = ['encourage', 'relate', 'congrats'] as const;
+export const REACTION_TYPES = ['encourage', 'relate', 'congrats', 'heart', 'hug', 'haha'] as const;
 export type ReactionType = (typeof REACTION_TYPES)[number];
 export type ReactionCounts = Record<ReactionType, number>;
 

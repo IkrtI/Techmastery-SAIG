@@ -1,6 +1,6 @@
 import { Schema, model, type InferSchemaType, type Types } from 'mongoose';
 
-export const REACTION_TYPES = ['encourage', 'relate', 'congrats'] as const;
+export const REACTION_TYPES = ['encourage', 'relate', 'congrats', 'heart', 'hug', 'haha'] as const;
 export type ReactionType = (typeof REACTION_TYPES)[number];
 
 const reactionSchema = new Schema(

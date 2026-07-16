@@ -194,7 +194,8 @@
 .mm-react:hover{color:var(--text-body);border-color:var(--border-strong)}
 .mm-react:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 .mm-react.is-active{border-color:var(--_rc);color:var(--text-body);background:color-mix(in srgb, var(--_rc) 14%, transparent)}
-.mm-react__dot{width:7px;height:7px;border-radius:var(--radius-full);background:var(--_rc);flex:none}
+.mm-react__emoji{font-size:16px;line-height:1;flex:none;filter:grayscale(0.35);transition:filter var(--dur-fast) ease}
+.mm-react:hover .mm-react__emoji,.mm-react.is-active .mm-react__emoji{filter:none}
 .mm-react__count{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:11px;color:var(--text-muted)}
 .mm-react[disabled]{opacity:.6;cursor:default}
 .mm-comments{display:flex;flex-direction:column;gap:10px;padding-top:10px;border-top:1px solid var(--border)}

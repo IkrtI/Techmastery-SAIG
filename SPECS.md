@@ -93,7 +93,7 @@ Indexes: `{createdAt:-1, _id:-1}`, `{faculty:1, createdAt:-1, _id:-1}`, `{majorN
 |---|---|---|
 | post | ObjectId → Mood | |
 | user | ObjectId → User | unique index `{post, user}` — one reaction per user per post |
-| type | enum `encourage` `relate` `congrats` | switching type updates in place |
+| type | enum `encourage` `relate` `congrats` `heart` `hug` `haha` (emoji chips 💪🫂🎉❤️🤗😂) | switching type updates in place |
 
 ### RefreshToken
 | field | type |

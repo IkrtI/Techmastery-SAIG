@@ -10,10 +10,13 @@ export function badgeText(m: MoodPublic, lang: Lang): string {
   return `${fac} · ${lang === 'en' ? 'Y' : 'ปี '}${m.year}`;
 }
 
-const REACTION_META: Record<ReactionType, { label: StringKey; color: string }> = {
-  encourage: { label: 'reactEncourage', color: 'var(--mood-hyped)' },
-  relate: { label: 'reactRelate', color: 'var(--mood-sad)' },
-  congrats: { label: 'reactCongrats', color: 'var(--mood-happy)' },
+const REACTION_META: Record<ReactionType, { label: StringKey; emoji: string; color: string }> = {
+  encourage: { label: 'reactEncourage', emoji: '💪', color: 'var(--mood-stressed)' },
+  relate: { label: 'reactRelate', emoji: '🫂', color: 'var(--mood-sad)' },
+  congrats: { label: 'reactCongrats', emoji: '🎉', color: 'var(--mood-happy)' },
+  heart: { label: 'reactHeart', emoji: '❤️', color: 'var(--mood-hyped)' },
+  hug: { label: 'reactHug', emoji: '🤗', color: 'var(--mood-tired)' },
+  haha: { label: 'reactHaha', emoji: '😂', color: 'var(--mood-meh)' },
 };
 
 export interface MoodCardProps {
@@ -73,11 +76,12 @@ export function MoodCard({ post, lang, isMine = false, busy = false, onEdit, onD
               className={'mm-react' + (active ? ' is-active' : '')}
               style={{ '--_rc': REACTION_META[type].color } as CSSProperties}
               aria-pressed={active}
+              aria-label={t(REACTION_META[type].label, lang)}
+              title={t(REACTION_META[type].label, lang)}
               disabled={toggleReaction.isPending}
               onClick={() => toggleReaction.mutate({ type, active })}
             >
-              <span className="mm-react__dot" />
-              {t(REACTION_META[type].label, lang)}
+              <span className="mm-react__emoji" aria-hidden="true">{REACTION_META[type].emoji}</span>
               {count > 0 && <span className="mm-react__count">{count}</span>}
             </button>
           );

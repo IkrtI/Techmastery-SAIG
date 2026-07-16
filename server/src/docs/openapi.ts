@@ -16,6 +16,7 @@ import {
   reactionBodySchema,
   statsQuerySchema,
 } from '../routes/schemas.js';
+import { REACTION_TYPES } from '../models/Reaction.js';
 
 extendZodWithOpenApi(z);
 
@@ -32,7 +33,7 @@ const facultyPublic = z
   .openapi('FacultyPublic');
 
 const reactionCounts = z
-  .object({ encourage: z.number().int(), relate: z.number().int(), congrats: z.number().int() })
+  .object(Object.fromEntries(REACTION_TYPES.map((t) => [t, z.number().int()])) as Record<(typeof REACTION_TYPES)[number], z.ZodNumber>)
   .openapi('ReactionCounts');
 
 const moodPublic = z
@@ -48,7 +49,7 @@ const moodPublic = z
     isMine: z.boolean(),
     commentCount: z.number().int(),
     reactions: reactionCounts,
-    myReaction: z.enum(['encourage', 'relate', 'congrats']).nullable(),
+    myReaction: z.enum(REACTION_TYPES).nullable(),
   })
   .openapi('MoodPublic', {
     description: 'The only mood serializer — never contains author-identifying fields (anonymity invariant).',
@@ -285,7 +286,7 @@ registry.registerPath({
   responses: { 204: { description: 'Deleted' }, 401: errorResponses[401], 403: errorResponses[403], 404: errorResponses[404] },
 });
 
-const reactionState = z.object({ reactions: reactionCounts, myReaction: z.enum(['encourage', 'relate', 'congrats']).nullable() });
+const reactionState = z.object({ reactions: reactionCounts, myReaction: z.enum(REACTION_TYPES).nullable() });
 
 registry.registerPath({
   method: 'put',

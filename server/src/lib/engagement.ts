@@ -11,7 +11,8 @@ export interface Engagement {
 }
 
 export function emptyEngagement(): Engagement {
-  return { commentCount: 0, reactions: { encourage: 0, relate: 0, congrats: 0 }, myReaction: null };
+  const reactions = Object.fromEntries(REACTION_TYPES.map((t) => [t, 0])) as Record<ReactionType, number>;
+  return { commentCount: 0, reactions, myReaction: null };
 }
 
 export async function fetchEngagement(postIds: Types.ObjectId[], userId: string): Promise<Map<string, Engagement>> {

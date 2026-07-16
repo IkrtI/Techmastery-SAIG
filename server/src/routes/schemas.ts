@@ -3,6 +3,7 @@
 import { isValidObjectId } from 'mongoose';
 import { z } from 'zod';
 import { MOOD_TYPES } from '../models/Mood.js';
+import { REACTION_TYPES } from '../models/Reaction.js';
 import { containsHarm, containsProfanity } from '../lib/profanity.js';
 
 export const moodTypeSchema = z.enum(MOOD_TYPES);
@@ -25,7 +26,7 @@ export const commentBodySchema = z.object({
 });
 
 export const reactionBodySchema = z.object({
-  type: z.enum(['encourage', 'relate', 'congrats']),
+  type: z.enum(REACTION_TYPES),
 });
 
 export const onboardingBodySchema = z.object({

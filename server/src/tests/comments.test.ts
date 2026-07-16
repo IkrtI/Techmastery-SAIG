@@ -121,6 +121,10 @@ describe('reactions', () => {
     const removed = await request(app).delete(`/api/moods/${postId}/reaction`).set('Authorization', otherAuth).expect(200);
     expect(removed.body.myReaction).toBeNull();
     expect(removed.body.reactions.relate).toBe(0);
+
+    const heart = await request(app).put(`/api/moods/${postId}/reaction`).set('Authorization', otherAuth).send({ type: 'heart' }).expect(200);
+    expect(heart.body.myReaction).toBe('heart');
+    expect(heart.body.reactions.heart).toBe(1);
   });
 
   it('invalid reaction type → 400; unknown post → 404', async () => {
