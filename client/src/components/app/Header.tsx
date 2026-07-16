@@ -1,36 +1,70 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
 import { SegmentedControl } from '@/components/core/SegmentedControl';
-import { IconButton } from '@/components/core/IconButton';
 import { useAuthStore } from '@/stores/authStore';
 import { useLangStore, t, type Lang } from '@/lib/i18n';
 import { logout } from '@/lib/api';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
-export function Header() {
+function useNavLinks(lang: Lang) {
   const user = useAuthStore((s) => s.user);
-  const { lang, setLang } = useLangStore();
-  const navigate = useNavigate();
-  const links: { to: string; label: string }[] = [
+  const links = [
     { to: '/', label: t('feed', lang) },
     { to: '/me', label: t('myMoods', lang) },
   ];
   if (user?.role === 'admin') links.push({ to: '/admin', label: t('admin', lang) });
+  return links;
+}
+
+function Brand() {
+  const navigate = useNavigate();
   return (
-    <header className="mmk-header">
-      <div className="mmk-header__in">
-        <button className="mmk-brand" onClick={() => navigate('/')} aria-label="Mood of the Major">
-          Mood<b>&nbsp;of the&nbsp;</b>Major
-        </button>
-        <nav className="mmk-nav">
-          {links.map((l) => (
-            <NavLink key={l.to} to={l.to} end={l.to === '/'} className={({ isActive }) => 'mmk-navlink' + (isActive ? ' is-active' : '')}>
-              {l.label}
-            </NavLink>
-          ))}
-        </nav>
-        <div className="mmk-header__right">
+    <button className="mm-brand" onClick={() => navigate('/')} aria-label="Mood of the Major">
+      <span className="mm-brand__dot mm-brand__dot--sm" />
+      <span className="mm-brand__name mm-brand__name--sm">
+        Mood <b>of the Major</b>
+      </span>
+    </button>
+  );
+}
+
+export function Header() {
+  const { lang, setLang } = useLangStore();
+  const navigate = useNavigate();
+  const mobile = useIsMobile();
+  const links = useNavLinks(lang);
+  const doLogout = () => void logout().then(() => navigate('/login'));
+
+  return (
+    <header className="mm-header">
+      <Brand />
+      {!mobile && (
+        <>
+          <nav className="mm-nav">
+            {links.map((l) => (
+              <NavLink key={l.to} to={l.to} end={l.to === '/'} className={({ isActive }) => 'mm-nav__item' + (isActive ? ' is-active' : '')}>
+                <span className="mm-nav__dot" />
+                {l.label}
+              </NavLink>
+            ))}
+          </nav>
+          <div className="mm-header__right">
+            <SegmentedControl
+              options={[
+                { value: 'th', label: 'ไทย' },
+                { value: 'en', label: 'EN' },
+              ]}
+              value={lang}
+              onChange={(v) => setLang(v as Lang)}
+            />
+            <button className="mm-logout" onClick={doLogout}>
+              {t('logout', lang)}
+            </button>
+          </div>
+        </>
+      )}
+      {mobile && (
+        <div className="mm-header__right">
           <SegmentedControl
-            size="sm"
             options={[
               { value: 'th', label: 'ไทย' },
               { value: 'en', label: 'EN' },
@@ -38,16 +72,27 @@ export function Header() {
             value={lang}
             onChange={(v) => setLang(v as Lang)}
           />
-          <IconButton
-            label={t('logout', lang)}
-            onClick={() => {
-              void logout().then(() => navigate('/login'));
-            }}
-          >
-            <LogOut />
-          </IconButton>
+          <button className="mm-logout" onClick={doLogout}>
+            {t('logout', lang)}
+          </button>
         </div>
-      </div>
+      )}
     </header>
+  );
+}
+
+/** Mobile-only bottom navigation (dot indicator per design). */
+export function BottomNav() {
+  const lang = useLangStore((s) => s.lang);
+  const links = useNavLinks(lang);
+  return (
+    <nav className="mm-bottomnav">
+      {links.map((l) => (
+        <NavLink key={l.to} to={l.to} end={l.to === '/'} className={({ isActive }) => 'mm-bottomnav__item' + (isActive ? ' is-active' : '')}>
+          <span className="mm-bottomnav__dot" />
+          {l.label}
+        </NavLink>
+      ))}
+    </nav>
   );
 }

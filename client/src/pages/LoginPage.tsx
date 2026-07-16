@@ -1,8 +1,6 @@
-import { LogIn } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/core/Button';
 import { SegmentedControl } from '@/components/core/SegmentedControl';
-import { LivingBackground } from '@/components/mood/LivingBackground';
 import { useLangStore, t, type Lang, type StringKey } from '@/lib/i18n';
 
 const SSO_ERRORS: Record<string, StringKey> = {
@@ -11,16 +9,17 @@ const SSO_ERRORS: Record<string, StringKey> = {
   sso_exchange: 'ssoErrorExchange',
 };
 
+/** Landing — dark hero with a drifting rose/sky glow and one CTA. */
 export function LoginPage() {
   const { lang, setLang } = useLangStore();
   const [searchParams] = useSearchParams();
   const errorKey = SSO_ERRORS[searchParams.get('error') ?? ''];
+  const [h1a, h1b] = t('landingH1', lang).split('\n');
   return (
-    <div className="mmk-login">
-      <LivingBackground as="absolute" mood="happy" />
-      <div className="mmk-login__top">
+    <div className="mm-landing">
+      <div className="mm-landing__glow" aria-hidden="true" />
+      <div className="mm-landing__lang">
         <SegmentedControl
-          size="sm"
           options={[
             { value: 'th', label: 'ไทย' },
             { value: 'en', label: 'EN' },
@@ -29,22 +28,30 @@ export function LoginPage() {
           onChange={(v) => setLang(v as Lang)}
         />
       </div>
-      <div className="mmk-login__center">
-        <div className="mmk-brandbig">
-          Mood<b> of the </b>Major
+      <div className="mm-landing__inner">
+        <span className="mm-brand" style={{ cursor: 'default' }}>
+          <span className="mm-brand__dot" />
+          <span className="mm-brand__name">
+            Mood <b>of the Major</b>
+          </span>
+        </span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <h1 className="mm-landing__h1">
+            {h1a}
+            <br />
+            {h1b}
+          </h1>
+          <p className="mm-landing__sub">{t('landingSub', lang)}</p>
         </div>
-        <p className="mmk-tag">{t('tagline', lang)}</p>
-        <div className="mmk-login__cta">
-          {errorKey && (
-            <p role="alert" style={{ margin: '0 0 14px', color: 'var(--destructive)', fontSize: 14, fontWeight: 500 }}>
-              {t(errorKey, lang)}
-            </p>
-          )}
-          <Button size="lg" fullWidth leftIcon={<LogIn />} onClick={() => window.location.assign('/api/auth/login')}>
-            {t('login', lang)}
-          </Button>
-          <p className="mmk-login__foot">{t('loginNote', lang)}</p>
-        </div>
+        {errorKey && (
+          <p className="mm-alert" role="alert">
+            {t(errorKey, lang)}
+          </p>
+        )}
+        <Button size="lg" onClick={() => window.location.assign('/api/auth/login')}>
+          {t('login', lang)}
+        </Button>
+        <span className="mm-landing__foot">{t('loginNote', lang)}</span>
       </div>
     </div>
   );

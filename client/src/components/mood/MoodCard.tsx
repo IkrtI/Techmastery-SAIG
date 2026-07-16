@@ -1,96 +1,88 @@
-import { useState, type CSSProperties, type HTMLAttributes } from 'react';
-import { moodMeta, type MoodType } from '@/lib/moodMeta';
+import { useState, type CSSProperties } from 'react';
+import { moodMeta, moodVars, type MoodType } from '@/lib/moodMeta';
+import { t, type Lang } from '@/lib/i18n';
 
-const Dots = () => (
-  <svg viewBox="0 0 24 24" fill="currentColor">
-    <circle cx="5" cy="12" r="1.6" />
-    <circle cx="12" cy="12" r="1.6" />
-    <circle cx="19" cy="12" r="1.6" />
-  </svg>
-);
-const Pencil = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 20h9" />
-    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-  </svg>
-);
-const Trash = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M3 6h18" />
-    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-    <line x1="10" x2="10" y1="11" y2="17" />
-    <line x1="14" x2="14" y1="11" y2="17" />
-  </svg>
-);
-
-export interface MoodCardProps extends HTMLAttributes<HTMLElement> {
+export interface MoodCardProps {
   mood: MoodType;
   text: string;
-  faculty: string;
-  year?: number | null;
-  time?: string;
+  badgeText: string;
+  time: string;
+  lang: Lang;
   isMine?: boolean;
+  busy?: boolean;
   onEdit?: () => void;
+  /** Called after the user confirms the inline delete prompt. */
   onDelete?: () => void;
-  lang?: 'th' | 'en';
 }
 
-/** A single anonymous mood post in the feed. Tinted by mood; owner sees a ⋯ edit/delete menu. Never renders a name. */
-export function MoodCard({
-  mood,
-  text,
-  faculty,
-  year,
-  time,
-  isMine = false,
-  onEdit,
-  onDelete,
-  lang = 'th',
-  className = '',
-  ...rest
-}: MoodCardProps) {
+/**
+ * Anonymous mood post: dot avatar tinted by mood, faculty/year badge, mono
+ * timestamp. Owners get a kebab that opens an inline actions row; delete asks
+ * for an inline confirmation (no separate dialog). Never renders a name.
+ */
+export function MoodCard({ mood, text, badgeText, time, lang, isMine = false, busy = false, onEdit, onDelete }: MoodCardProps) {
   const [menu, setMenu] = useState(false);
-  const meta = moodMeta[mood];
-  const vars = { '--_tint': `var(--mood-${mood}-tint)` } as CSSProperties;
-  const ctx = `${faculty}${year != null ? ` • ${lang === 'en' ? 'Y' + year : 'ปี ' + year}` : ''}`;
+  const [confirming, setConfirming] = useState(false);
   return (
-    <article className={'mm-moodcard ' + className} style={vars} {...rest}>
+    <article className="mm-card mm-moodcard" style={moodVars(mood) as CSSProperties}>
       <div className="mm-moodcard__top">
-        <span className="mm-moodcard__emoji" aria-hidden="true">{meta ? meta.emoji : '🙂'}</span>
-        {time && <span className="mm-moodcard__time">{time}</span>}
-        {isMine && (
-          <div className="mm-moodcard__owner">
-            <button
-              className="mm-moodcard__more"
-              aria-label={lang === 'en' ? 'Options' : 'ตัวเลือก'}
-              aria-haspopup="menu"
-              aria-expanded={menu}
-              onClick={() => setMenu((v) => !v)}
-            >
-              <Dots />
-            </button>
-            {menu && (
-              <>
-                <div className="mm-moodcard__menuscrim" onClick={() => setMenu(false)} />
-                <div className="mm-moodcard__menu" role="menu">
-                  <button role="menuitem" className="mm-moodcard__mi" onClick={() => { setMenu(false); onEdit?.(); }}>
-                    <Pencil />
-                    <span>{lang === 'en' ? 'Edit' : 'แก้ไข'}</span>
-                  </button>
-                  <button role="menuitem" className="mm-moodcard__mi is-danger" onClick={() => { setMenu(false); onDelete?.(); }}>
-                    <Trash />
-                    <span>{lang === 'en' ? 'Delete' : 'ลบ'}</span>
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+        <span className="mm-moodcard__avatar" aria-hidden="true">
+          <span />
+        </span>
+        <div className="mm-moodcard__meta">
+          <span className="mm-moodcard__mood">{moodMeta[mood][lang]}</span>
+          <span className="mm-moodcard__badge">{badgeText}</span>
+        </div>
+        <span className="mm-moodcard__time">{time}</span>
+        {isMine && !confirming && (
+          <button
+            type="button"
+            className="mm-moodcard__kebab"
+            aria-label={t('edit', lang) + ' / ' + t('delete', lang)}
+            aria-haspopup="true"
+            aria-expanded={menu}
+            onClick={() => setMenu((v) => !v)}
+          >
+            ⋯
+          </button>
         )}
       </div>
       <p className="mm-moodcard__text">{text}</p>
-      <div className="mm-moodcard__foot">
-        <span className="mm-moodcard__ctx">{ctx}</span>
-      </div>
+      {menu && !confirming && (
+        <div className="mm-moodcard__actions">
+          <button
+            type="button"
+            className="mm-btn mm-btn--outline mm-btn--sm"
+            onClick={() => {
+              setMenu(false);
+              onEdit?.();
+            }}
+          >
+            {t('edit', lang)}
+          </button>
+          <button
+            type="button"
+            className="mm-btn mm-btn--danger mm-btn--sm"
+            onClick={() => {
+              setMenu(false);
+              setConfirming(true);
+            }}
+          >
+            {t('delete', lang)}
+          </button>
+        </div>
+      )}
+      {confirming && (
+        <div className="mm-moodcard__actions">
+          <span className="mm-moodcard__confirmq">{t('deleteConfirmQ', lang)}</span>
+          <button type="button" className="mm-btn mm-btn--danger-solid mm-btn--sm" disabled={busy} onClick={() => onDelete?.()}>
+            {t('confirm', lang)}
+          </button>
+          <button type="button" className="mm-btn mm-btn--outline mm-btn--sm" disabled={busy} onClick={() => setConfirming(false)}>
+            {t('cancel', lang)}
+          </button>
+        </div>
+      )}
     </article>
   );
 }

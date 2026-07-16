@@ -6,7 +6,7 @@ Authoritative technical contract. If code and this file disagree, fix one of the
 
 | Layer | Choice |
 |---|---|
-| Frontend | React + TypeScript, Vite, Tailwind CSS v4, design-system components ported from the Claude Design project (`client/src/components` + `styles/tokens.css`), Zustand, TanStack Query, Zod, axios, lucide-react. Motion = design-token CSS animations (no Framer Motion); forms = direct Zod validation (no RHF); no shadcn/ui |
+| Frontend | React + TypeScript, Vite, Tailwind CSS v4, dark design system ported from Claude Design project 6e23f469 (`client/src/components` + `styles/tokens.css`, Geist + Geist Mono with Anuphan Thai fallback), Zustand, TanStack Query, Zod, axios, lucide-react. Motion = design-token CSS animations (no Framer Motion); forms = direct Zod validation (no RHF); no shadcn/ui |
 | Backend | Express + TypeScript (tsx dev / tsc build), Mongoose, Zod, jose (JWT + JWKS), helmet, express-rate-limit, cookie-parser |
 | Database | MongoDB 7 (docker compose dev / Dokploy prod) |
 | API docs | Swagger UI at `/api/docs` (zod-to-openapi) |

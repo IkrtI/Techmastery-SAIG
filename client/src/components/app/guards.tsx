@@ -4,7 +4,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useLangStore, t } from '@/lib/i18n';
 
 function CenterNote({ children }: { children: ReactNode }) {
-  return <div className="mmk-center">{children}</div>;
+  return <div className="mm-center">{children}</div>;
 }
 
 export function RequireAuth() {

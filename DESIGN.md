@@ -2,6 +2,8 @@
 
 Product and architecture design. Technical contracts live in `SPECS.md`; execution status in `PLAN.md`.
 
+> **Visual revision (2026-07-16):** the visual language below (calm light "stone" theme, Anuphan-only, emoji moods) is superseded by the dark revision in Claude Design project `6e23f469` ("Mood of the Major.dc.html"), implemented in `client/src/styles/tokens.css` + `ui.css`. Dark-only `#0b0f14` base, `#11161d` surfaces, rose `#f43f5e` CTA, sky `#38bdf8` focus/links, Geist + Geist Mono (Anuphan Thai fallback), moods rendered as colored dots (happy amber / hyped rose / meh slate / tired violet / stressed orange / sad sky), radial glow living background, inline delete confirmation, skeleton loading, mobile bottom nav + filter bottom sheet. Product concept, anonymity rules, and architecture below remain authoritative.
+
 ## Concept
 
 Anonymous mood-sharing for KMITL students. Users post how they feel; the feed shows the collective vibe of campus filtered by faculty/major — no identities, only academic context ("Engineering • Y2"). The page itself *feels* the mood: a living background shifts color toward the dominant emotion of whatever you're looking at.

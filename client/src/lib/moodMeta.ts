@@ -1,5 +1,5 @@
-// Shared mood metadata. Data only — colors live in styles/tokens.css
-// (referenced as var(--mood-<key>*) at render time).
+// Shared mood metadata (dark revision). Colors live in styles/tokens.css as
+// var(--mood-<key>), var(--mood-<key>-soft), var(--mood-<key>-glow).
 export const MOOD_TYPES = ['happy', 'hyped', 'meh', 'tired', 'stressed', 'sad'] as const;
 export type MoodType = (typeof MOOD_TYPES)[number];
 
@@ -8,14 +8,23 @@ export const moodOrder: readonly MoodType[] = ['happy', 'hyped', 'meh', 'tired',
 
 export type MoodCounts = Partial<Record<MoodType, number>>;
 
-export const moodMeta: Record<MoodType, { emoji: string; th: string; en: string }> = {
-  happy:    { emoji: '😊', th: 'มีความสุข', en: 'Happy' },
-  hyped:    { emoji: '🔥', th: 'คึกคัก',    en: 'Hyped' },
-  meh:      { emoji: '😑', th: 'เฉย ๆ',     en: 'Meh' },
-  tired:    { emoji: '😴', th: 'เหนื่อย',    en: 'Tired' },
-  stressed: { emoji: '😰', th: 'เครียด',     en: 'Stressed' },
-  sad:      { emoji: '😢', th: 'เศร้า',      en: 'Sad' },
+export const moodMeta: Record<MoodType, { th: string; en: string }> = {
+  happy:    { th: 'มีความสุข', en: 'Happy' },
+  hyped:    { th: 'มันส์',      en: 'Hyped' },
+  meh:      { th: 'เฉยๆ',       en: 'Meh' },
+  tired:    { th: 'เหนื่อย',    en: 'Tired' },
+  stressed: { th: 'เครียด',     en: 'Stressed' },
+  sad:      { th: 'เศร้า',      en: 'Sad' },
 };
+
+/** CSS custom-property helpers for a mood's accent/soft/glow colors. */
+export function moodVars(m: MoodType): { '--_accent': string; '--_soft': string } {
+  return { '--_accent': `var(--mood-${m})`, '--_soft': `var(--mood-${m}-soft)` };
+}
+
+export function moodGlow(m: MoodType): string {
+  return `var(--mood-${m}-glow)`;
+}
 
 /** Dominant mood from a counts map; ties broken by the fixed moodOrder. Null when empty. */
 export function dominantMood(counts?: MoodCounts | null): MoodType | null {

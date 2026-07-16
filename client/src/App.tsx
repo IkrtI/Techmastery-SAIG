@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Outlet, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Header } from '@/components/app/Header';
-import { LivingBackground } from '@/components/mood/LivingBackground';
+import { Header, BottomNav } from '@/components/app/Header';
+import { ToastHost } from '@/components/app/Toast';
+import { GlowBackground } from '@/components/mood/GlowBackground';
 import { GuestOnly, RequireAdmin, RequireAuth, RequireOnboarded } from '@/components/app/guards';
 import { LoginPage } from '@/pages/LoginPage';
 import { OnboardingPage } from '@/pages/OnboardingPage';
@@ -13,35 +14,28 @@ import { bootstrapSession } from '@/lib/api';
 import { useFilterStore } from '@/stores/filterStore';
 import { useStats } from '@/hooks/queries';
 import { useAuthStore } from '@/stores/authStore';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
 });
 
-/** Authed app shell: living background driven by the current stats + sticky header. */
+/** Authed shell: glow background on the feed, sticky header, mobile bottom nav, toast host. */
 function AppShell() {
+  const location = useLocation();
+  const mobile = useIsMobile();
   const filters = useFilterStore();
+  const isFeed = location.pathname === '/';
   const stats = useStats(filters);
-  const counts = filters.moodType ? { [filters.moodType]: 1 } : stats.data?.counts;
   return (
-    <div className="mmk-app">
-      <LivingBackground counts={counts ?? null} as="fixed" />
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      {isFeed && <GlowBackground mood={filters.moodType} counts={stats.data?.counts ?? null} />}
       <Header />
-      <main className="mmk-main">
+      <main className="mm-appmain">
         <Outlet />
       </main>
-    </div>
-  );
-}
-
-/** Onboarding shell: header-less, calm background. */
-function OnboardingShell() {
-  return (
-    <div className="mmk-app">
-      <LivingBackground as="fixed" mood={null} />
-      <main className="mmk-main">
-        <Outlet />
-      </main>
+      {mobile && <BottomNav />}
+      <ToastHost />
     </div>
   );
 }
@@ -60,9 +54,7 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
           </Route>
           <Route element={<RequireAuth />}>
-            <Route element={<OnboardingShell />}>
-              <Route path="/onboarding" element={<OnboardingPage />} />
-            </Route>
+            <Route path="/onboarding" element={<OnboardingPage />} />
             <Route element={<RequireOnboarded />}>
               <Route element={<AppShell />}>
                 <Route path="/" element={<FeedPage />} />

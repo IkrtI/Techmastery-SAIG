@@ -1,22 +1,49 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, Wind, X } from 'lucide-react';
 import { Button } from '@/components/core/Button';
 import { MoodCard } from '@/components/mood/MoodCard';
-import { StatsBar } from '@/components/mood/StatsBar';
-import { FilterBar } from '@/components/app/FilterBar';
+import { MoodStats } from '@/components/mood/MoodStats';
+import { FilterBar, FilterDrawer, FilterTrigger } from '@/components/app/FilterBar';
 import { Composer, type ComposerValue } from '@/components/app/Composer';
-import { DeleteConfirmDialog } from '@/components/app/ConfirmDialog';
 import { useCreateMood, useDeleteMood, useMoodsInfinite, useStats, useUpdateMood } from '@/hooks/queries';
 import { useFilterStore, filtersFromSearchParams, filtersToSearchParams } from '@/stores/filterStore';
 import { useLangStore, t, relTime } from '@/lib/i18n';
+import { useToastStore } from '@/stores/toastStore';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { apiErrorMessage } from '@/lib/api';
 import type { MoodPublic } from '@/lib/types';
+
+function FeedSkeleton() {
+  return (
+    <div className="mm-stack">
+      {[0, 1, 2].map((k) => (
+        <div key={k} className="mm-card mm-skeleton">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+            <span className="mm-skeleton__bone" style={{ width: 34, height: 34, borderRadius: 999 }} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span className="mm-skeleton__bone" style={{ width: 90, height: 11 }} />
+              <span className="mm-skeleton__bone" style={{ width: 130, height: 9 }} />
+            </div>
+          </div>
+          <span className="mm-skeleton__bone" style={{ width: '100%', height: 11, marginBottom: 7 }} />
+          <span className="mm-skeleton__bone" style={{ width: '70%', height: 11 }} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function badgeText(m: MoodPublic, lang: 'th' | 'en'): string {
+  const fac = m.faculty ? (lang === 'en' ? m.faculty.nameEn : m.faculty.nameTh) : '—';
+  return `${fac} · ${lang === 'en' ? 'Y' : 'ปี '}${m.year}`;
+}
 
 export function FeedPage() {
   const lang = useLangStore((s) => s.lang);
   const filters = useFilterStore();
   const [searchParams, setSearchParams] = useSearchParams();
+  const mobile = useIsMobile();
+  const toast = useToastStore((s) => s.show);
 
   // URL → store on mount (shareable filter links), store → URL on change (SPECS §7).
   const hydrated = useRef(false);
@@ -39,101 +66,128 @@ export function FeedPage() {
 
   const [composerOpen, setComposerOpen] = useState(false);
   const [editing, setEditing] = useState<MoodPublic | null>(null);
-  const [deleting, setDeleting] = useState<MoodPublic | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Auto-load next page when the sentinel scrolls into view.
   const sentinel = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const el = sentinel.current;
     if (!el) return;
-    const io = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && feed.hasNextPage && !feed.isFetchingNextPage) void feed.fetchNextPage();
-    });
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && feed.hasNextPage && !feed.isFetchingNextPage) void feed.fetchNextPage();
+      },
+      { rootMargin: '220px' },
+    );
     io.observe(el);
     return () => io.disconnect();
   }, [feed]);
 
   const items = feed.data?.pages.flatMap((p) => p.items) ?? [];
-  const counts = stats.data?.counts ?? { happy: 0, hyped: 0, meh: 0, tired: 0, stressed: 0, sad: 0 };
+  const counts = stats.data?.counts ?? {};
 
   const submitComposer = (value: ComposerValue) => {
-    const done = () => {
-      setComposerOpen(false);
-      setEditing(null);
-    };
-    if (editing) updateMood.mutate({ id: editing.id, ...value }, { onSuccess: done });
-    else createMood.mutate(value, { onSuccess: done });
+    if (editing) {
+      updateMood.mutate(
+        { id: editing.id, ...value },
+        {
+          onSuccess: () => {
+            setComposerOpen(false);
+            setEditing(null);
+            toast(t('toastSaved', lang));
+          },
+        },
+      );
+    } else {
+      createMood.mutate(value, {
+        onSuccess: () => {
+          setComposerOpen(false);
+          toast(t('toastPosted', lang));
+        },
+      });
+    }
   };
 
   return (
-    <div className="mmk-feedcol">
-      <div className="mmk-statswrap">
-        <div className="mmk-statshead">
-          <span className="mmk-statstotal">
-            {stats.data ? `${stats.data.total} ${t('moods', lang)}` : t('loading', lang)}
-          </span>
-          {filters.moodType && (
-            <button className="mmk-clear" onClick={() => filters.set({ moodType: null })}>
-              <X />
-              {t('clear', lang)}
-            </button>
-          )}
+    <div className="mm-page">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
+        <h1 className="mm-page__title">{t('feedTitle', lang)}</h1>
+        {mobile && <FilterTrigger lang={lang} onOpen={() => setDrawerOpen(true)} />}
+      </div>
+
+      {!mobile && <FilterBar lang={lang} />}
+
+      <MoodStats counts={counts} total={stats.data?.total ?? 0} value={filters.moodType} onSelect={(m) => filters.set({ moodType: m })} lang={lang} />
+
+      {feed.isError ? (
+        <div className="mm-state mm-state--error">
+          <span className="mm-state__icon mm-state__icon--error">!</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <p className="mm-state__title">{t('feedErrorTitle', lang)}</p>
+            <p className="mm-state__sub">{apiErrorMessage(feed.error, t('feedErrorSub', lang))}</p>
+          </div>
+          <Button size="sm" onClick={() => void feed.refetch()}>
+            {t('retry', lang)}
+          </Button>
         </div>
-        <StatsBar counts={counts} value={filters.moodType} onSelect={(m) => filters.set({ moodType: m })} lang={lang} />
-      </div>
-
-      <FilterBar lang={lang} />
-
-      <div className="mmk-stack">
-        {feed.isLoading ? (
-          <div className="mmk-center">{t('loading', lang)}</div>
-        ) : feed.isError ? (
-          <div className="mmk-empty">
-            <p>{apiErrorMessage(feed.error, t('errorGeneric', lang))}</p>
-            <Button variant="secondary" style={{ marginTop: 12 }} onClick={() => void feed.refetch()}>
-              {t('retry', lang)}
-            </Button>
+      ) : feed.isLoading ? (
+        <FeedSkeleton />
+      ) : items.length === 0 ? (
+        <div className="mm-state mm-state--empty">
+          <span className="mm-state__icon mm-state__icon--empty">
+            <span />
+          </span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <p className="mm-state__title">{t('emptyTitle', lang)}</p>
+            <p className="mm-state__sub">{t('emptySub', lang)}</p>
           </div>
-        ) : items.length === 0 ? (
-          <div className="mmk-empty">
-            <Wind />
-            <p>{t('feedEmpty', lang)}</p>
-          </div>
-        ) : (
-          items.map((m, i) => (
-            <div key={m.id} className="mmk-enter" style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}>
-              <MoodCard
-                mood={m.moodType}
-                text={m.text}
-                faculty={m.faculty ? (lang === 'en' ? m.faculty.nameEn : m.faculty.nameTh) : '—'}
-                year={m.year}
-                time={relTime(m.createdAt, lang)}
-                isMine={m.isMine}
-                lang={lang}
-                onEdit={() => {
-                  setEditing(m);
-                  setComposerOpen(true);
-                }}
-                onDelete={() => setDeleting(m)}
-              />
+          <Button variant="outline" size="sm" onClick={() => filters.reset()}>
+            {t('clearFilters', lang)}
+          </Button>
+        </div>
+      ) : (
+        <div className="mm-stack">
+          {items.map((m) => (
+            <MoodCard
+              key={m.id}
+              mood={m.moodType}
+              text={m.text}
+              badgeText={badgeText(m, lang)}
+              time={relTime(m.createdAt, lang)}
+              lang={lang}
+              isMine={m.isMine}
+              busy={deleteMood.isPending}
+              onEdit={() => {
+                setEditing(m);
+                setComposerOpen(true);
+              }}
+              onDelete={() => deleteMood.mutate(m.id, { onSuccess: () => toast(t('toastDeleted', lang)) })}
+            />
+          ))}
+          {feed.isFetchingNextPage && (
+            <div className="mm-loadmore">
+              <span className="mm-spinner" />
+              {t('loadingMore', lang)}
             </div>
-          ))
-        )}
-        <div ref={sentinel} />
-        {feed.isFetchingNextPage && <div className="mmk-center">{t('loading', lang)}</div>}
-      </div>
+          )}
+          {!feed.hasNextPage && items.length > 0 && <p className="mm-allseen">{t('allSeen', lang)}</p>}
+          <div ref={sentinel} style={{ height: 1 }} />
+        </div>
+      )}
 
       <button
-        className="mmk-fab"
+        className={'mm-fab' + (mobile ? ' mm-fab--mobile' : '')}
         onClick={() => {
           setEditing(null);
           setComposerOpen(true);
         }}
-        aria-label={t('share', lang)}
+        aria-label={t('fab', lang)}
       >
-        <Plus />
-        <span className="mmk-fab__label">{t('share', lang)}</span>
+        <span className="mm-fab__plus">+</span>
+        {!mobile && t('fab', lang)}
       </button>
+
+      <FilterDrawer lang={lang} open={mobile && drawerOpen} onClose={() => setDrawerOpen(false)} />
 
       <Composer
         open={composerOpen}
@@ -152,16 +206,6 @@ export function FeedPage() {
           setComposerOpen(false);
           setEditing(null);
         }}
-      />
-
-      <DeleteConfirmDialog
-        open={deleting != null}
-        lang={lang}
-        busy={deleteMood.isPending}
-        onConfirm={() => {
-          if (deleting) deleteMood.mutate(deleting.id, { onSuccess: () => setDeleting(null) });
-        }}
-        onClose={() => setDeleting(null)}
       />
     </div>
   );

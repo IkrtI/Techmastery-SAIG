@@ -21,7 +21,7 @@ let refreshing: Promise<string> | null = null;
 async function refreshAccessToken(): Promise<string> {
   if (!refreshing) {
     refreshing = axios
-      .post<RefreshResponse>('/api/auth/refresh')
+      .post<RefreshResponse>('/api/auth/refresh', undefined, { timeout: 10000 })
       .then((res) => {
         useAuthStore.getState().setAuth(res.data.user, res.data.accessToken);
         return res.data.accessToken;

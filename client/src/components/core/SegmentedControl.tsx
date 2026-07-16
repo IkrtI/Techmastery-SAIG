@@ -4,27 +4,27 @@ export interface SegmentedOption {
 }
 
 export interface SegmentedControlProps {
-  options: (string | SegmentedOption)[];
+  options: SegmentedOption[];
   value: string;
   onChange?: (value: string) => void;
-  size?: 'sm' | 'md';
   className?: string;
 }
 
-/** Pill segmented control — the TH/EN language toggle and other short exclusive options. */
-export function SegmentedControl({ options, value, onChange, size = 'md', className = '' }: SegmentedControlProps) {
+/** Pill segmented control — the TH/EN language toggle. */
+export function SegmentedControl({ options, value, onChange, className = '' }: SegmentedControlProps) {
   return (
-    <div className={'mm-seg mm-seg--' + size + ' ' + className} role="group">
-      {options.map((o) => {
-        const v = typeof o === 'string' ? o : o.value;
-        const l = typeof o === 'string' ? o : o.label;
-        const active = v === value;
-        return (
-          <button key={v} type="button" className={'mm-seg__opt' + (active ? ' is-active' : '')} aria-pressed={active} onClick={() => onChange?.(v)}>
-            {l}
-          </button>
-        );
-      })}
+    <div className={'mm-seg ' + className} role="group">
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          className={'mm-seg__opt' + (o.value === value ? ' is-active' : '')}
+          aria-pressed={o.value === value}
+          onClick={() => onChange?.(o.value)}
+        >
+          {o.label}
+        </button>
+      ))}
     </div>
   );
 }
