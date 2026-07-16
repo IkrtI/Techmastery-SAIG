@@ -8,6 +8,7 @@ interface Discovery {
   token_endpoint: string;
   jwks_uri: string;
   issuer: string;
+  userinfo_endpoint?: string;
 }
 
 let discoveryCache: Discovery | null = null;
@@ -82,7 +83,7 @@ export async function exchangeAndVerify(code: string, verifier: string, expected
     console.error(`OIDC token exchange failed: HTTP ${res.status} ${body.slice(0, 500)}`);
     throw new ApiError('UNAUTHENTICATED', 'Token exchange failed');
   }
-  const tokens = (await res.json()) as { id_token?: string };
+  const tokens = (await res.json()) as { id_token?: string; access_token?: string };
   if (!tokens.id_token) {
     throw new ApiError('UNAUTHENTICATED', 'Missing id_token');
   }
@@ -92,6 +93,19 @@ export async function exchangeAndVerify(code: string, verifier: string, expected
   });
   if (payload.nonce !== expectedNonce) {
     throw new ApiError('VALIDATION_ERROR', 'OIDC nonce mismatch');
+  }
+  if (env().SSO_DEBUG) {
+    // Temporary diagnostics (enable with SSO_DEBUG=1): what the IdP actually returns.
+    console.log('SAIG_SSO_DEBUG token_response_keys=' + JSON.stringify(Object.keys(tokens)));
+    console.log('SAIG_SSO_DEBUG id_token_payload=' + JSON.stringify(payload));
+    if (d.userinfo_endpoint && tokens.access_token) {
+      try {
+        const ui = await fetch(d.userinfo_endpoint, { headers: { authorization: `Bearer ${tokens.access_token}` } });
+        console.log('SAIG_SSO_DEBUG userinfo_status=' + ui.status + ' userinfo=' + (await ui.text()).slice(0, 1000));
+      } catch (e) {
+        console.log('SAIG_SSO_DEBUG userinfo_error=' + (e instanceof Error ? e.message : String(e)));
+      }
+    }
   }
   const email = typeof payload.email === 'string' ? payload.email.toLowerCase() : '';
   if (!/^[^@]+@kmitl\.ac\.th$/.test(email)) {

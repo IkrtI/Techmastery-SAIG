@@ -13,6 +13,10 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32),
   ACCESS_TOKEN_TTL: z.string().default('15m'),
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(15),
+  SSO_DEBUG: z
+    .string()
+    .optional()
+    .transform((v) => v === '1' || v === 'true'),
   SEED_ADMIN_EMAILS: z
     .string()
     .default('')
