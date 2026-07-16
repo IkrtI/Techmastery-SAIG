@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { SegmentedControl } from '@/components/core/SegmentedControl';
 import { useAuthStore } from '@/stores/authStore';
 import { useLangStore, t, type Lang } from '@/lib/i18n';
-import { useThemeStore, type Theme } from '@/stores/themeStore';
+import { useThemeStore } from '@/stores/themeStore';
 import { logout } from '@/lib/api';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
@@ -28,17 +28,31 @@ function Brand() {
   );
 }
 
-function ThemeToggle({ lang }: { lang: Lang }) {
+const SunIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+  </svg>
+);
+const MoonIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+  </svg>
+);
+
+export function ThemeToggle({ lang }: { lang: Lang }) {
   const { theme, setTheme } = useThemeStore();
+  const dark = theme === 'dark';
   return (
-    <SegmentedControl
-      options={[
-        { value: 'dark', label: t('themeDark', lang) },
-        { value: 'light', label: t('themeLight', lang) },
-      ]}
-      value={theme}
-      onChange={(v) => setTheme(v as Theme)}
-    />
+    <button
+      type="button"
+      className="mm-themebtn"
+      aria-label={dark ? t('themeLight', lang) : t('themeDark', lang)}
+      title={dark ? t('themeLight', lang) : t('themeDark', lang)}
+      onClick={() => setTheme(dark ? 'light' : 'dark')}
+    >
+      {dark ? <SunIcon /> : <MoonIcon />}
+    </button>
   );
 }
 
@@ -66,7 +80,7 @@ export function Header() {
           <ThemeToggle lang={lang} />
             <SegmentedControl
               options={[
-                { value: 'th', label: 'ไทย' },
+                { value: 'th', label: 'TH' },
                 { value: 'en', label: 'EN' },
               ]}
               value={lang}
@@ -83,7 +97,7 @@ export function Header() {
           <ThemeToggle lang={lang} />
           <SegmentedControl
             options={[
-              { value: 'th', label: 'ไทย' },
+              { value: 'th', label: 'TH' },
               { value: 'en', label: 'EN' },
             ]}
             value={lang}

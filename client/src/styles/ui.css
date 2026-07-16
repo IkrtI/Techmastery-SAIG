@@ -65,6 +65,14 @@
 .mm-seg__opt.is-active{background:var(--seg-active-bg);color:var(--seg-active-fg)}
 .mm-seg__opt:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 
+/* --- Theme icon button -------------------------------------------- */
+.mm-themebtn{width:34px;height:34px;flex:none;display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid var(--border);border-radius:var(--radius-full);background:transparent;color:var(--text-muted);
+  cursor:pointer;touch-action:manipulation;transition:color var(--dur-fast) ease,border-color var(--dur-fast) ease}
+.mm-themebtn:hover{color:var(--text-body);border-color:var(--border-strong)}
+.mm-themebtn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.mm-themebtn svg{width:16px;height:16px}
+
 /* --- Mood chip (dot + label [+count]) ---------------------------- */
 .mm-chip{display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:var(--radius-full);border:1px solid var(--border);
   background:transparent;color:var(--text-secondary);font-family:var(--font-sans);font-size:12px;font-weight:600;cursor:pointer;
