@@ -108,7 +108,7 @@
 .mm-chip--suggest:hover{border-color:var(--info);color:var(--text-body)}
 
 /* --- Cards / surfaces --------------------------------------------- */
-.mm-card{background:var(--surface-card);border:1px solid var(--border);border-radius:var(--radius-lg)}
+.mm-card{background:var(--surface-card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-card)}
 
 /* --- Landing -------------------------------------------------------- */
 .mm-landing{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;
