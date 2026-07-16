@@ -4,10 +4,9 @@ import { Button } from '@/components/core/Button';
 import { Composer, type ComposerValue } from '@/components/app/Composer';
 import { ProfileDialog } from '@/components/app/ProfileDialog';
 import { useCreateMood, useDeleteMood, useMoodsInfinite, useUpdateMood } from '@/hooks/queries';
-import { useLangStore, t, relTime } from '@/lib/i18n';
+import { useLangStore, t } from '@/lib/i18n';
 import { useToastStore } from '@/stores/toastStore';
 import { apiErrorMessage } from '@/lib/api';
-import { badgeText } from './FeedPage';
 import type { MoodPublic } from '@/lib/types';
 
 const NO_FILTERS = { faculty: null, major: null, moodType: null, fromDay: null, toDay: null };
@@ -89,10 +88,7 @@ export function MyMoodsPage() {
           {items.map((m) => (
             <MoodCard
               key={m.id}
-              mood={m.moodType}
-              text={m.text}
-              badgeText={badgeText(m, lang)}
-              time={relTime(m.createdAt, lang)}
+              post={m}
               lang={lang}
               isMine
               busy={deleteMood.isPending}

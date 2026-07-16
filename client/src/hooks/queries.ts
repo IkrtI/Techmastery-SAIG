@@ -7,7 +7,8 @@ import {
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
 import { dayRangeToUtc, type Filters } from '@/stores/filterStore';
-import type { FacultyPublic, MoodPage, MoodPublic, StatsOverview, UserPublic } from '@/lib/types';
+import type { CommentPublic, FacultyPublic, MoodPage, MoodPublic, ReactionCounts, ReactionType, StatsOverview, UserPublic } from '@/lib/types';
+import type { InfiniteData } from '@tanstack/react-query';
 import type { MoodType } from '@/lib/moodMeta';
 
 function filterParams(f: Filters): Record<string, string> {
@@ -91,6 +92,89 @@ export function useOnboard() {
       (await api.patch<{ user: UserPublic }>('/auth/onboarding', body)).data.user,
     onSuccess: (user) => {
       useAuthStore.getState().setUser(user);
+    },
+  });
+}
+
+
+/** Patch one post inside every cached feed page (no refetch). */
+function patchPost(qc: ReturnType<typeof useQueryClient>, postId: string, patch: Partial<MoodPublic>): void {
+  qc.setQueriesData<InfiniteData<MoodPage>>({ queryKey: ['moods'] }, (data) => {
+    if (!data) return data;
+    return {
+      ...data,
+      pages: data.pages.map((page) => ({
+        ...page,
+        items: page.items.map((m) => (m.id === postId ? { ...m, ...patch } : m)),
+      })),
+    };
+  });
+}
+
+export function useComments(postId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['comments', postId],
+    queryFn: async () => (await api.get<{ items: CommentPublic[] }>(`/moods/${postId}/comments`)).data.items,
+    enabled,
+  });
+}
+
+export function useAddComment(postId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (text: string) => (await api.post<CommentPublic>(`/moods/${postId}/comments`, { text })).data,
+    onSuccess: (created) => {
+      qc.setQueryData<CommentPublic[]>(['comments', postId], (prev) => (prev ? [...prev, created] : [created]));
+      qc.setQueriesData<InfiniteData<MoodPage>>({ queryKey: ['moods'] }, (data) => data);
+      patchCount(qc, postId, 1);
+    },
+  });
+}
+
+export function useDeleteComment(postId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (commentId: string) => {
+      await api.delete(`/comments/${commentId}`);
+      return commentId;
+    },
+    onSuccess: (commentId) => {
+      qc.setQueryData<CommentPublic[]>(['comments', postId], (prev) => prev?.filter((c) => c.id !== commentId));
+      patchCount(qc, postId, -1);
+    },
+  });
+}
+
+function patchCount(qc: ReturnType<typeof useQueryClient>, postId: string, delta: number): void {
+  qc.setQueriesData<InfiniteData<MoodPage>>({ queryKey: ['moods'] }, (data) => {
+    if (!data) return data;
+    return {
+      ...data,
+      pages: data.pages.map((page) => ({
+        ...page,
+        items: page.items.map((m) => (m.id === postId ? { ...m, commentCount: Math.max(0, m.commentCount + delta) } : m)),
+      })),
+    };
+  });
+}
+
+interface ReactionState {
+  reactions: ReactionCounts;
+  myReaction: ReactionType | null;
+}
+
+/** Toggle semantics: tapping the active reaction removes it, otherwise sets/switches. */
+export function useToggleReaction(postId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ type, active }: { type: ReactionType; active: boolean }) => {
+      const res = active
+        ? await api.delete<ReactionState>(`/moods/${postId}/reaction`)
+        : await api.put<ReactionState>(`/moods/${postId}/reaction`, { type });
+      return res.data;
+    },
+    onSuccess: (state) => {
+      patchPost(qc, postId, { reactions: state.reactions, myReaction: state.myReaction });
     },
   });
 }

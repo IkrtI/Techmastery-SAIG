@@ -15,6 +15,19 @@ export const moodTextSchema = z
 
 export const idParamsSchema = z.object({ id: z.string().refine(isValidObjectId, 'Invalid id') });
 
+export const commentBodySchema = z.object({
+  text: z
+    .string()
+    .trim()
+    .min(1)
+    .max(200)
+    .refine((t) => !containsProfanity(t), { message: 'ข้อความมีคำไม่เหมาะสม' }),
+});
+
+export const reactionBodySchema = z.object({
+  type: z.enum(['encourage', 'relate', 'congrats']),
+});
+
 export const onboardingBodySchema = z.object({
   facultyId: z.string().refine(isValidObjectId, 'Invalid faculty id'),
   major: z.string().trim().min(1).max(100),

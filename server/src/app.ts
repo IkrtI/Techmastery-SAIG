@@ -6,6 +6,7 @@ import swaggerUi from 'swagger-ui-express';
 import { env } from './config/env.js';
 import { authRouter } from './routes/auth.js';
 import { moodsRouter } from './routes/moods.js';
+import { commentsRouter } from './routes/comments.js';
 import { statsRouter } from './routes/stats.js';
 import { metaRouter } from './routes/meta.js';
 import { adminRouter } from './routes/admin.js';
@@ -37,6 +38,7 @@ export function createApp(): Express {
 
   app.use('/api/auth', authRouter);
   app.use('/api/moods', moodsRouter);
+  app.use('/api', commentsRouter);
   app.use('/api/stats', statsRouter);
   app.use('/api/admin', adminRouter);
 

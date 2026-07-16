@@ -19,6 +19,9 @@ export interface MoodPublic {
   createdAt: string;
   updatedAt: string;
   isMine: boolean;
+  commentCount: number;
+  reactions: Record<'encourage' | 'relate' | 'congrats', number>;
+  myReaction: 'encourage' | 'relate' | 'congrats' | null;
 }
 
 /**
@@ -26,7 +29,17 @@ export interface MoodPublic {
  * studentId, displayName) and no majorNormalized may ever appear here —
  * anonymity invariant, asserted on raw JSON by tests.
  */
-export function toMoodPublic(mood: MoodDoc & { faculty: FacultyDoc | Types.ObjectId | null }, viewerId: string): MoodPublic {
+export interface EngagementView {
+  commentCount: number;
+  reactions: Record<'encourage' | 'relate' | 'congrats', number>;
+  myReaction: 'encourage' | 'relate' | 'congrats' | null;
+}
+
+export function toMoodPublic(
+  mood: MoodDoc & { faculty: FacultyDoc | Types.ObjectId | null },
+  viewerId: string,
+  engagement: EngagementView,
+): MoodPublic {
   const fac = mood.faculty && 'slug' in mood.faculty ? (mood.faculty as FacultyDoc) : null;
   return {
     id: mood._id.toString(),
@@ -38,6 +51,34 @@ export function toMoodPublic(mood: MoodDoc & { faculty: FacultyDoc | Types.Objec
     createdAt: mood.createdAt.toISOString(),
     updatedAt: mood.updatedAt.toISOString(),
     isMine: mood.author.toString() === viewerId,
+    commentCount: engagement.commentCount,
+    reactions: engagement.reactions,
+    myReaction: engagement.myReaction,
+  };
+}
+
+export interface CommentPublic {
+  id: string;
+  text: string;
+  faculty: FacultyPublic | null;
+  year: number;
+  createdAt: string;
+  isMine: boolean;
+}
+
+/** Comments obey the same anonymity invariant: no author-identifying fields. */
+export function toCommentPublic(
+  comment: { _id: Types.ObjectId; text: string; year: number; createdAt: Date; author: Types.ObjectId; faculty: FacultyDoc | Types.ObjectId | null },
+  viewerId: string,
+): CommentPublic {
+  const fac = comment.faculty && typeof comment.faculty === 'object' && 'slug' in comment.faculty ? (comment.faculty as FacultyDoc) : null;
+  return {
+    id: comment._id.toString(),
+    text: comment.text,
+    faculty: fac ? { slug: fac.slug, nameTh: fac.nameTh, nameEn: fac.nameEn } : null,
+    year: comment.year,
+    createdAt: comment.createdAt.toISOString(),
+    isMine: comment.author.toString() === viewerId,
   };
 }
 

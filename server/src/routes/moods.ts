@@ -12,6 +12,9 @@ import { requireAuth, requireOnboarded, type AuthedRequest } from '../middleware
 import { decodeCursor, encodeCursor } from '../lib/cursor.js';
 import { toMoodPublic } from '../lib/serialize.js';
 import { buildMoodFilter } from '../lib/moodFilters.js';
+import { emptyEngagement, fetchEngagement, fetchEngagementOne } from '../lib/engagement.js';
+import { Comment } from '../models/Comment.js';
+import { Reaction } from '../models/Reaction.js';
 import { createMoodBodySchema, idParamsSchema, listMoodsQuerySchema, updateMoodBodySchema } from './schemas.js';
 
 export const mutationLimiter = rateLimit({
@@ -53,7 +56,11 @@ moodsRouter.get('/', validate({ query: listMoodsQuerySchema }), async (req: Auth
       docs.length > q.limit && page.length > 0
         ? encodeCursor(page[page.length - 1].createdAt, page[page.length - 1]._id.toString())
         : null;
-    res.json({ items: page.map((m) => toMoodPublic(m, req.user!.sub)), nextCursor });
+    const engagement = await fetchEngagement(page.map((m) => m._id), req.user!.sub);
+    res.json({
+      items: page.map((m) => toMoodPublic(m, req.user!.sub, engagement.get(m._id.toString()) ?? emptyEngagement())),
+      nextCursor,
+    });
   } catch (err) {
     next(err);
   }
@@ -77,7 +84,7 @@ moodsRouter.post('/', mutationLimiter, validate({ body: createMoodBodySchema }),
       year: user.year,
     });
     const populated = (await created.populate('faculty')) as PopulatedMood;
-    res.status(201).json(toMoodPublic(populated, req.user!.sub));
+    res.status(201).json(toMoodPublic(populated, req.user!.sub, emptyEngagement()));
   } catch (err) {
     next(err);
   }
@@ -97,7 +104,7 @@ moodsRouter.patch(
       if (body.text !== undefined) mood.text = body.text;
       await mood.save();
       const populated = (await mood.populate('faculty')) as PopulatedMood;
-      res.json(toMoodPublic(populated, req.user!.sub));
+      res.json(toMoodPublic(populated, req.user!.sub, await fetchEngagementOne(mood._id, req.user!.sub)));
     } catch (err) {
       next(err);
     }
@@ -113,7 +120,7 @@ moodsRouter.delete(
       const mood = await Mood.findById(req.params.id);
       if (!mood) throw new ApiError('NOT_FOUND', 'Mood not found');
       if (mood.author.toString() !== req.user!.sub) throw new ApiError('FORBIDDEN', 'Not your mood');
-      await mood.deleteOne();
+      await Promise.all([mood.deleteOne(), Comment.deleteMany({ post: mood._id }), Reaction.deleteMany({ post: mood._id })]);
       res.status(204).end();
     } catch (err) {
       next(err);

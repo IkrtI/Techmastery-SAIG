@@ -7,7 +7,7 @@ import { FilterBar, FilterDrawer, FilterTrigger } from '@/components/app/FilterB
 import { MoodDock } from '@/components/app/MoodDock';
 import { useDeleteMood, useMoodsInfinite, useStats } from '@/hooks/queries';
 import { useFilterStore, filtersFromSearchParams, filtersToSearchParams } from '@/stores/filterStore';
-import { useLangStore, t, relTime } from '@/lib/i18n';
+import { useLangStore, t } from '@/lib/i18n';
 import { useToastStore } from '@/stores/toastStore';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { apiErrorMessage } from '@/lib/api';
@@ -31,11 +31,6 @@ function FeedSkeleton() {
       ))}
     </div>
   );
-}
-
-export function badgeText(m: MoodPublic, lang: 'th' | 'en'): string {
-  const fac = m.faculty ? (lang === 'en' ? m.faculty.nameEn : m.faculty.nameTh) : '—';
-  return `${fac} · ${lang === 'en' ? 'Y' : 'ปี '}${m.year}`;
 }
 
 export function FeedPage() {
@@ -125,10 +120,7 @@ export function FeedPage() {
           {items.map((m) => (
             <MoodCard
               key={m.id}
-              mood={m.moodType}
-              text={m.text}
-              badgeText={badgeText(m, lang)}
-              time={relTime(m.createdAt, lang)}
+              post={m}
               lang={lang}
               isMine={m.isMine}
               busy={deleteMood.isPending}

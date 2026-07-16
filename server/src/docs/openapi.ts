@@ -7,11 +7,13 @@ import {
 } from '@asteasolutions/zod-to-openapi';
 import { z } from 'zod';
 import {
+  commentBodySchema,
   createMoodBodySchema,
   idParamsSchema,
   listMoodsQuerySchema,
   moodTypeSchema,
   onboardingBodySchema,
+  reactionBodySchema,
   statsQuerySchema,
 } from '../routes/schemas.js';
 
@@ -29,6 +31,10 @@ const facultyPublic = z
   .object({ slug: z.string(), nameTh: z.string(), nameEn: z.string() })
   .openapi('FacultyPublic');
 
+const reactionCounts = z
+  .object({ encourage: z.number().int(), relate: z.number().int(), congrats: z.number().int() })
+  .openapi('ReactionCounts');
+
 const moodPublic = z
   .object({
     id: z.string(),
@@ -40,6 +46,9 @@ const moodPublic = z
     createdAt: z.string().datetime(),
     updatedAt: z.string().datetime(),
     isMine: z.boolean(),
+    commentCount: z.number().int(),
+    reactions: reactionCounts,
+    myReaction: z.enum(['encourage', 'relate', 'congrats']).nullable(),
   })
   .openapi('MoodPublic', {
     description: 'The only mood serializer — never contains author-identifying fields (anonymity invariant).',
@@ -224,6 +233,87 @@ registry.registerPath({
   security: secured,
   request: { params: idParamsSchema },
   responses: { 204: { description: 'Deleted' }, 401: errorResponses[401], 403: errorResponses[403], 404: errorResponses[404] },
+});
+
+const commentPublic = z
+  .object({
+    id: z.string(),
+    text: z.string(),
+    faculty: facultyPublic.nullable(),
+    year: z.number().int(),
+    createdAt: z.string().datetime(),
+    isMine: z.boolean(),
+  })
+  .openapi('CommentPublic', { description: 'Anonymous like posts: no author-identifying fields.' });
+
+registry.registerPath({
+  method: 'get',
+  path: '/api/moods/{id}/comments',
+  summary: 'Comments under a post (anonymous, oldest-first)',
+  security: secured,
+  request: { params: idParamsSchema },
+  responses: {
+    200: { description: 'Comments', content: { 'application/json': { schema: z.object({ items: z.array(commentPublic) }) } } },
+    401: errorResponses[401],
+    403: errorResponses[403],
+    404: errorResponses[404],
+  },
+});
+
+registry.registerPath({
+  method: 'post',
+  path: '/api/moods/{id}/comments',
+  summary: 'Add an encouragement comment (profanity-screened)',
+  security: secured,
+  request: { params: idParamsSchema, body: { content: { 'application/json': { schema: commentBodySchema } } } },
+  responses: {
+    201: { description: 'Created', content: { 'application/json': { schema: commentPublic } } },
+    400: errorResponses[400],
+    401: errorResponses[401],
+    403: errorResponses[403],
+    404: errorResponses[404],
+    429: errorResponses[429],
+  },
+});
+
+registry.registerPath({
+  method: 'delete',
+  path: '/api/comments/{id}',
+  summary: 'Delete a comment (owner or admin)',
+  security: secured,
+  request: { params: idParamsSchema },
+  responses: { 204: { description: 'Deleted' }, 401: errorResponses[401], 403: errorResponses[403], 404: errorResponses[404] },
+});
+
+const reactionState = z.object({ reactions: reactionCounts, myReaction: z.enum(['encourage', 'relate', 'congrats']).nullable() });
+
+registry.registerPath({
+  method: 'put',
+  path: '/api/moods/{id}/reaction',
+  summary: 'Set/replace your reaction (one per user per post)',
+  security: secured,
+  request: { params: idParamsSchema, body: { content: { 'application/json': { schema: reactionBodySchema } } } },
+  responses: {
+    200: { description: 'Fresh counts', content: { 'application/json': { schema: reactionState } } },
+    400: errorResponses[400],
+    401: errorResponses[401],
+    403: errorResponses[403],
+    404: errorResponses[404],
+  },
+});
+
+registry.registerPath({
+  method: 'delete',
+  path: '/api/moods/{id}/reaction',
+  summary: 'Remove your reaction',
+  security: secured,
+  request: { params: idParamsSchema },
+  responses: {
+    200: { description: 'Fresh counts', content: { 'application/json': { schema: reactionState } } },
+    401: errorResponses[401],
+    403: errorResponses[403],
+    404: errorResponses[404],
+  },
 });
 
 registry.registerPath({

@@ -19,6 +19,10 @@ export interface UserPublic {
   onboarded: boolean;
 }
 
+export const REACTION_TYPES = ['encourage', 'relate', 'congrats'] as const;
+export type ReactionType = (typeof REACTION_TYPES)[number];
+export type ReactionCounts = Record<ReactionType, number>;
+
 export interface MoodPublic {
   id: string;
   moodType: MoodType;
@@ -28,6 +32,18 @@ export interface MoodPublic {
   year: number;
   createdAt: string;
   updatedAt: string;
+  isMine: boolean;
+  commentCount: number;
+  reactions: ReactionCounts;
+  myReaction: ReactionType | null;
+}
+
+export interface CommentPublic {
+  id: string;
+  text: string;
+  faculty: { slug: string; nameTh: string; nameEn: string } | null;
+  year: number;
+  createdAt: string;
   isMine: boolean;
 }
 

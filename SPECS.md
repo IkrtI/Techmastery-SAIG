@@ -79,6 +79,22 @@ Indexes: `{createdAt:-1, _id:-1}`, `{faculty:1, createdAt:-1, _id:-1}`, `{majorN
 | slug | string, unique |
 | knownMajors | string[] — seed-managed canonical suggestions; onboarding never mutates this list |
 
+### Comment
+| field | type | rules |
+|---|---|---|
+| post | ObjectId → Mood | indexed with createdAt |
+| author | ObjectId → User | **never serialized** |
+| text | string | 1–200 after trim, profanity-screened |
+| faculty / year | denormalized from author | same anonymity pattern as Mood |
+| timestamps | | listed oldest-first |
+
+### Reaction
+| field | type | rules |
+|---|---|---|
+| post | ObjectId → Mood | |
+| user | ObjectId → User | unique index `{post, user}` — one reaction per user per post |
+| type | enum `encourage` `relate` `congrats` | switching type updates in place |
+
 ### RefreshToken
 | field | type |
 |---|---|
@@ -149,6 +165,18 @@ Base `/api`. All responses JSON. Errors: `{error: {code, message, details?}}`.
 **Cursor:** base64url of `{createdAt, id}`; query uses `$or [{createdAt: {$lt}}, {createdAt: eq, _id: {$lt}}]`, sort `{createdAt:-1, _id:-1}`. Invalid cursor → 400.
 
 `mine=true` adds `author=req.user.id`; the API never accepts an author ID from the client. `major` is normalized to `majorNormalized` before querying. Date ranges are half-open: `from` is inclusive (`$gte`) and `to` is exclusive (`$lt`), both transported as UTC ISO-8601 timestamps. The Thai date-picker converts the selected Asia/Bangkok start day and the day after the selected end day to UTC before requesting; require `from < to`.
+
+### Comments & Reactions (Bearer+onboarded)
+| method path | in | out |
+|---|---|---|
+| GET `/moods/:id/comments` | — | `{items: CommentPublic[]}` oldest-first (cap 200) |
+| POST `/moods/:id/comments` | `{text}` (1–200, profanity-screened) | `CommentPublic` (201) |
+| DELETE `/comments/:id` | — | 204; owner or admin |
+| PUT `/moods/:id/reaction` | `{type}` | `{reactions, myReaction}` — upsert, one per user |
+| DELETE `/moods/:id/reaction` | — | `{reactions, myReaction: null}` |
+
+**CommentPublic**: `{id, text, faculty{slug,nameTh,nameEn}, year, createdAt, isMine}` — anonymity invariant applies.
+**MoodPublic** additionally carries `{commentCount, reactions: {encourage,relate,congrats}, myReaction}` (batched aggregation per feed page). Deleting a mood cascades its comments and reactions.
 
 ### Stats
 | method path | auth | in | out |

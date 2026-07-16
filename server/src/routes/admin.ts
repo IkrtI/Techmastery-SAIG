@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { Mood } from '../models/Mood.js';
+import { Comment } from '../models/Comment.js';
+import { Reaction } from '../models/Reaction.js';
 import { ApiError } from '../middleware/error.js';
 import { validate } from '../middleware/validate.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
@@ -14,7 +16,7 @@ adminRouter.delete('/moods/:id', mutationLimiter, validate({ params: idParamsSch
   try {
     const mood = await Mood.findById(req.params.id);
     if (!mood) throw new ApiError('NOT_FOUND', 'Mood not found');
-    await mood.deleteOne();
+    await Promise.all([mood.deleteOne(), Comment.deleteMany({ post: mood._id }), Reaction.deleteMany({ post: mood._id })]);
     res.status(204).end();
   } catch (err) {
     next(err);

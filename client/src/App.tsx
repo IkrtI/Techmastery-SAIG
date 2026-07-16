@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { BrowserRouter, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Header, BottomNav } from '@/components/app/Header';
+import { Header } from '@/components/app/Header';
 import { ToastHost } from '@/components/app/Toast';
 import { GlowBackground } from '@/components/mood/GlowBackground';
 import { GuestOnly, RequireAdmin, RequireAuth, RequireOnboarded } from '@/components/app/guards';
@@ -15,7 +15,6 @@ import { initMatomo, trackPageView } from '@/lib/matomo';
 import { useFilterStore } from '@/stores/filterStore';
 import { useStats } from '@/hooks/queries';
 import { useAuthStore } from '@/stores/authStore';
-import { useIsMobile } from '@/hooks/useIsMobile';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
@@ -38,7 +37,6 @@ function MatomoTracker() {
 /** Authed shell: glow background on the feed, sticky header, mobile bottom nav, toast host. */
 function AppShell() {
   const location = useLocation();
-  const mobile = useIsMobile();
   const filters = useFilterStore();
   const isFeed = location.pathname === '/';
   const stats = useStats(filters);
@@ -49,7 +47,6 @@ function AppShell() {
       <main className="mm-appmain">
         <Outlet />
       </main>
-      {mobile && <BottomNav />}
       <ToastHost />
     </div>
   );

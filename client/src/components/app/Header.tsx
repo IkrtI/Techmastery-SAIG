@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { useLangStore, t, type Lang } from '@/lib/i18n';
 import { useThemeStore } from '@/stores/themeStore';
@@ -79,19 +79,20 @@ export function Header() {
   );
 }
 
-const DotsIcon = () => (
-  <svg viewBox="0 0 24 24" fill="currentColor">
-    <circle cx="12" cy="5" r="1.7" />
-    <circle cx="12" cy="12" r="1.7" />
-    <circle cx="12" cy="19" r="1.7" />
+const MenuIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <path d="M4 6h16M4 12h16M4 18h16" />
   </svg>
 );
 
-/** Single header menu: theme, language, logout. */
+/** Single header menu: navigation (mobile), theme, language, logout. */
 function HeaderMenu() {
   const { lang, setLang } = useLangStore();
   const { theme, setTheme } = useThemeStore();
   const navigate = useNavigate();
+  const location = useLocation();
+  const mobile = useIsMobile();
+  const links = useNavLinks(lang);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
 
@@ -122,10 +123,33 @@ function HeaderMenu() {
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
       >
-        <DotsIcon />
+        <MenuIcon />
       </button>
       {open && (
         <div className="mm-menu__panel" role="menu">
+          {mobile && (
+            <>
+              {links.map((l) => {
+                const active = l.to === '/' ? location.pathname === '/' : location.pathname.startsWith(l.to);
+                return (
+                  <button
+                    key={l.to}
+                    type="button"
+                    role="menuitem"
+                    className={'mm-menu__row' + (active ? ' is-active' : '')}
+                    onClick={() => {
+                      setOpen(false);
+                      navigate(l.to);
+                    }}
+                  >
+                    <span>{l.label}</span>
+                    <span className="mm-menu__navdot" aria-hidden="true" />
+                  </button>
+                );
+              })}
+              <div className="mm-menu__divider" />
+            </>
+          )}
           <button type="button" role="menuitem" className="mm-menu__row" onClick={() => setTheme(dark ? 'light' : 'dark')}>
             <span>{t('themeLabel', lang)}</span>
             <span className="mm-menu__val">
@@ -149,21 +173,5 @@ function HeaderMenu() {
         </div>
       )}
     </div>
-  );
-}
-
-/** Mobile-only bottom navigation (dot indicator per design). */
-export function BottomNav() {
-  const lang = useLangStore((s) => s.lang);
-  const links = useNavLinks(lang);
-  return (
-    <nav className="mm-bottomnav">
-      {links.map((l) => (
-        <NavLink key={l.to} to={l.to} end={l.to === '/'} className={({ isActive }) => 'mm-bottomnav__item' + (isActive ? ' is-active' : '')}>
-          <span className="mm-bottomnav__dot" />
-          {l.label}
-        </NavLink>
-      ))}
-    </nav>
   );
 }
