@@ -2,6 +2,7 @@ import type { Types } from 'mongoose';
 import type { MoodDoc } from '../models/Mood.js';
 import type { FacultyDoc } from '../models/Faculty.js';
 import type { UserDoc } from '../models/User.js';
+import type { ReactionType } from '../models/Reaction.js';
 
 export interface FacultyPublic {
   slug: string;
@@ -20,8 +21,8 @@ export interface MoodPublic {
   updatedAt: string;
   isMine: boolean;
   commentCount: number;
-  reactions: Record<'encourage' | 'relate' | 'congrats', number>;
-  myReaction: 'encourage' | 'relate' | 'congrats' | null;
+  reactions: Record<ReactionType, number>;
+  myReaction: ReactionType | null;
 }
 
 /**
@@ -31,8 +32,8 @@ export interface MoodPublic {
  */
 export interface EngagementView {
   commentCount: number;
-  reactions: Record<'encourage' | 'relate' | 'congrats', number>;
-  myReaction: 'encourage' | 'relate' | 'congrats' | null;
+  reactions: Record<ReactionType, number>;
+  myReaction: ReactionType | null;
 }
 
 export function toMoodPublic(
