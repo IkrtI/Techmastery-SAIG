@@ -179,7 +179,7 @@ Admin accounts come only from `SEED_ADMIN_EMAILS` in MVP. User search and role m
 Zod schemas defined once in `server/src/routes/schemas.ts` (shared by route validation and the OpenAPI registry); FE duplicates only composer + onboarding shapes (`client/src/lib/schemas.ts`) for direct Zod form validation:
 
 - `moodType`: `z.enum(['happy','hyped','meh','tired','stressed','sad'])`
-- `text`: `z.string().trim().min(1).max(280)`
+- `text`: `z.string().trim().min(1).max(280)` + profanity refine (`lib/profanity.ts`, Thai+English lists, repeat-collapse + leetspeak normalization, boundary-safe English match) — server authoritative, client mirrors for instant feedback
 - `major`: `z.string().trim().min(1).max(100)`; server applies NFKC normalization, collapses inner whitespace, and derives `majorNormalized`
 - `year`: `z.coerce.number().int().min(1).max(8)`
 - `facultyId`: `z.string().refine(isValidObjectId)`

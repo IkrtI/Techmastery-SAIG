@@ -230,9 +230,10 @@
 .mm-dock__cancel{border:none;background:none;cursor:pointer;font-family:var(--font-sans);font-size:12px;font-weight:600;
   color:var(--destructive);padding:2px 6px;border-radius:var(--radius-sm)}
 .mm-dock__cancel:hover{background:var(--destructive-tint)}
-.mm-dock__chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.mm-dock__chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:3px 3px 4px}
 .mm-dock__chips::-webkit-scrollbar{display:none}
 .mm-dock__chips .mm-chip{flex:none;padding:6px 11px;font-size:12px}
+.mm-dock__chips .mm-chip--picker.is-active{transform:none}
 .mm-dock__row{display:flex;align-items:flex-end;gap:8px}
 .mm-dock__input{flex:1;box-sizing:border-box;padding:10px 12px;border-radius:var(--radius-md);background:var(--surface-inset);
   border:1px solid var(--border);color:var(--text-body);font-family:var(--font-sans);font-size:14px;line-height:1.6;

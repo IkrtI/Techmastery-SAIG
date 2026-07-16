@@ -84,6 +84,7 @@ const STRINGS = {
   ssoErrorState: { th: 'เซสชันเข้าสู่ระบบหมดอายุ ลองใหม่อีกครั้ง', en: 'Sign-in session expired — please try again.' },
   ssoErrorDomain: { th: 'ใช้ได้เฉพาะบัญชี @kmitl.ac.th เท่านั้น', en: 'Only @kmitl.ac.th accounts are allowed.' },
   ssoErrorExchange: { th: 'เข้าสู่ระบบไม่สำเร็จ ลองใหม่อีกครั้ง', en: 'Sign-in failed — please try again.' },
+  profanityError: { th: 'ข้อความมีคำไม่เหมาะสม กรุณาแก้ไขก่อนโพสต์', en: 'Your post contains inappropriate language — please edit it first.' },
   errorGeneric: { th: 'เกิดข้อผิดพลาด ลองใหม่อีกครั้ง', en: 'Something went wrong. Please try again.' },
 } as const;
 

@@ -4,6 +4,7 @@ import { Textarea } from '@/components/core/Textarea';
 import { MoodChip } from '@/components/mood/MoodChip';
 import { moodOrder, type MoodType } from '@/lib/moodMeta';
 import { composerSchema } from '@/lib/schemas';
+import { containsProfanity } from '@/lib/profanity';
 import { t, type Lang } from '@/lib/i18n';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
@@ -45,7 +46,9 @@ export function Composer({ open, lang, initial = null, busy = false, error = nul
   }, [open, onClose]);
 
   if (!open) return null;
+  const profane = text.trim().length > 0 && containsProfanity(text);
   const valid = mood != null && composerSchema.safeParse({ moodType: mood, text }).success;
+  const shownError = profane ? t('profanityError', lang) : error;
   const title = initial ? t('composerTitleEdit', lang) : t('composerTitleNew', lang);
   const submitLabel = initial ? t('saveEdit', lang) : t('post', lang);
   const submit = () => {
@@ -69,9 +72,9 @@ export function Composer({ open, lang, initial = null, busy = false, error = nul
         </div>
       </div>
       <Textarea rows={4} placeholder={t('composerPh', lang)} value={text} onChange={(e) => setText(e.target.value.slice(0, 280))} />
-      {error && (
+      {shownError && (
         <p className="mm-alert" role="alert">
-          {error}
+          {shownError}
         </p>
       )}
       {mobile ? (

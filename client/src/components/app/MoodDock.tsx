@@ -3,6 +3,7 @@ import { Button } from '@/components/core/Button';
 import { MoodChip } from '@/components/mood/MoodChip';
 import { moodOrder, type MoodType } from '@/lib/moodMeta';
 import { composerSchema } from '@/lib/schemas';
+import { containsProfanity } from '@/lib/profanity';
 import { t, type Lang } from '@/lib/i18n';
 import { useCreateMood, useUpdateMood } from '@/hooks/queries';
 import { useToastStore } from '@/stores/toastStore';
@@ -48,8 +49,11 @@ export function MoodDock({ lang, editing, onCancelEdit }: MoodDockProps) {
   }, [text]);
 
   const busy = createMood.isPending || updateMood.isPending;
+  const profane = text.trim().length > 0 && containsProfanity(text);
   const valid = mood != null && composerSchema.safeParse({ moodType: mood, text }).success;
-  const error = createMood.isError
+  const error = profane
+    ? t('profanityError', lang)
+    : createMood.isError
     ? apiErrorMessage(createMood.error, t('errorGeneric', lang))
     : updateMood.isError
       ? apiErrorMessage(updateMood.error, t('errorGeneric', lang))

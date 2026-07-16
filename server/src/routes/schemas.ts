@@ -3,9 +3,15 @@
 import { isValidObjectId } from 'mongoose';
 import { z } from 'zod';
 import { MOOD_TYPES } from '../models/Mood.js';
+import { containsProfanity } from '../lib/profanity.js';
 
 export const moodTypeSchema = z.enum(MOOD_TYPES);
-export const moodTextSchema = z.string().trim().min(1).max(280);
+export const moodTextSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(280)
+  .refine((t) => !containsProfanity(t), { message: 'ข้อความมีคำไม่เหมาะสม' });
 
 export const idParamsSchema = z.object({ id: z.string().refine(isValidObjectId, 'Invalid id') });
 
