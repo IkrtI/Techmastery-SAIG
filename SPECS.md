@@ -130,7 +130,7 @@ Base `/api`. All responses JSON. Errors: `{error: {code, message, details?}}`.
 | method path | auth | in | out |
 |---|---|---|---|
 | GET `/auth/login` | — | — | 302 Keycloak |
-| GET `/auth/callback` | — | `?code&state` | 302 APP_URL |
+| GET `/auth/callback` | — | `?code&state` | 302 APP_URL; on failure 302 `APP_URL/login?error=sso_state|sso_domain|sso_exchange` (browser-facing — never raw JSON) |
 | POST `/auth/refresh` | refresh cookie | — | `{accessToken, user}` |
 | POST `/auth/logout` | refresh cookie | — | 204 |
 | GET `/auth/me` | Bearer | — | `{user}` (id, email, studentId, faculty{...}, major, year, role, onboarded) |

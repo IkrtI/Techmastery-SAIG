@@ -60,7 +60,7 @@ authRouter.get('/login', async (_req, res, next) => {
   }
 });
 
-authRouter.get('/callback', async (req, res, next) => {
+authRouter.get('/callback', async (req, res) => {
   try {
     const code = typeof req.query.code === 'string' ? req.query.code : '';
     const state = typeof req.query.state === 'string' ? req.query.state : '';
@@ -91,7 +91,18 @@ authRouter.get('/callback', async (req, res, next) => {
     setRefreshCookie(res, await issueRefreshToken(user._id));
     res.redirect(`${env().APP_URL}${user.onboarded ? '/' : '/onboarding'}`);
   } catch (err) {
-    next(err);
+    // Browser-facing navigation: redirect back to the login page with an
+    // error code instead of answering raw JSON.
+    console.error('OIDC callback failed:', err instanceof Error ? err.message : err);
+    const code =
+      err instanceof ApiError
+        ? err.code === 'VALIDATION_ERROR'
+          ? 'sso_state'
+          : err.code === 'FORBIDDEN'
+            ? 'sso_domain'
+            : 'sso_exchange'
+        : 'sso_exchange';
+    res.redirect(`${env().APP_URL}/login?error=${code}`);
   }
 });
 

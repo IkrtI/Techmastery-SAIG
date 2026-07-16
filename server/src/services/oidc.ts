@@ -78,6 +78,8 @@ export async function exchangeAndVerify(code: string, verifier: string, expected
     }),
   });
   if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    console.error(`OIDC token exchange failed: HTTP ${res.status} ${body.slice(0, 500)}`);
     throw new ApiError('UNAUTHENTICATED', 'Token exchange failed');
   }
   const tokens = (await res.json()) as { id_token?: string };

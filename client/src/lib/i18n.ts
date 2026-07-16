@@ -54,6 +54,9 @@ const STRINGS = {
   hoursAgo: { th: 'ชม.ที่แล้ว', en: 'hr ago' },
   daysAgo: { th: 'วันที่แล้ว', en: 'd ago' },
   justNow: { th: 'เมื่อกี้', en: 'just now' },
+  ssoErrorState: { th: 'เซสชันเข้าสู่ระบบหมดอายุ ลองใหม่อีกครั้ง', en: 'Sign-in session expired — please try again.' },
+  ssoErrorDomain: { th: 'ใช้ได้เฉพาะบัญชี @kmitl.ac.th เท่านั้น', en: 'Only @kmitl.ac.th accounts are allowed.' },
+  ssoErrorExchange: { th: 'เข้าสู่ระบบไม่สำเร็จ ลองใหม่อีกครั้ง', en: 'Sign-in failed — please try again.' },
 } as const;
 
 export type StringKey = keyof typeof STRINGS;

@@ -78,25 +78,28 @@ describe('OIDC callback', () => {
     expect(user!.role).toBe('admin');
   });
 
-  it('rejects state mismatch with 400', async () => {
+  it('rejects state mismatch: redirects to /login?error=sso_state, no refresh cookie', async () => {
     const { cookies, nonce } = await loginRedirect();
     sso.setNextIdToken({ nonce });
-    const res = await request(app).get('/api/auth/callback?code=abc&state=WRONG').set('Cookie', cookies).expect(400);
-    expect(res.body.error.code).toBe('VALIDATION_ERROR');
+    const res = await request(app).get('/api/auth/callback?code=abc&state=WRONG').set('Cookie', cookies).expect(302);
+    expect(res.headers.location).toBe(`${TEST_APP_URL}/login?error=sso_state`);
+    expect(cookieValue(cookieHeader(res), 'refresh_token')).toBeNull();
   });
 
-  it('rejects nonce mismatch with 400', async () => {
+  it('rejects nonce mismatch: redirects to /login?error=sso_state, no refresh cookie', async () => {
     const { cookies, state } = await loginRedirect();
     sso.setNextIdToken({ nonce: 'not-the-nonce' });
-    const res = await request(app).get(`/api/auth/callback?code=abc&state=${state}`).set('Cookie', cookies).expect(400);
-    expect(res.body.error.code).toBe('VALIDATION_ERROR');
+    const res = await request(app).get(`/api/auth/callback?code=abc&state=${state}`).set('Cookie', cookies).expect(302);
+    expect(res.headers.location).toBe(`${TEST_APP_URL}/login?error=sso_state`);
+    expect(cookieValue(cookieHeader(res), 'refresh_token')).toBeNull();
   });
 
-  it('rejects non-KMITL email', async () => {
+  it('rejects non-KMITL email: redirects to /login?error=sso_domain, no user created', async () => {
     const { cookies, state, nonce } = await loginRedirect();
     sso.setNextIdToken({ email: 'evil@gmail.com', nonce });
-    const res = await request(app).get(`/api/auth/callback?code=abc&state=${state}`).set('Cookie', cookies).expect(403);
-    expect(res.body.error.code).toBe('FORBIDDEN');
+    const res = await request(app).get(`/api/auth/callback?code=abc&state=${state}`).set('Cookie', cookies).expect(302);
+    expect(res.headers.location).toBe(`${TEST_APP_URL}/login?error=sso_domain`);
+    expect(await User.countDocuments()).toBe(0);
   });
 });
 
