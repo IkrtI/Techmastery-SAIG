@@ -210,8 +210,9 @@
 .mm-dock__chips .mm-chip{flex:none;padding:6px 11px;font-size:12px}
 .mm-dock__row{display:flex;align-items:flex-end;gap:8px}
 .mm-dock__input{flex:1;box-sizing:border-box;padding:10px 12px;border-radius:var(--radius-md);background:var(--surface-inset);
-  border:1px solid var(--border);color:var(--text-body);font-family:var(--font-sans);font-size:14px;line-height:1.45;
-  outline:none;resize:none;max-height:96px;transition:border-color var(--dur-fast) ease}
+  border:1px solid var(--border);color:var(--text-body);font-family:var(--font-sans);font-size:14px;line-height:1.6;
+  outline:none;resize:none;max-height:110px;overflow-y:auto;scrollbar-width:none;transition:border-color var(--dur-fast) ease}
+.mm-dock__input::-webkit-scrollbar{display:none}
 .mm-dock__input::placeholder{color:var(--text-subtle)}
 .mm-dock__input:focus{border-color:var(--info)}
 .mm-dock__count{font-size:10.5px;color:var(--text-subtle);font-family:var(--font-mono);flex:none;padding-bottom:10px}

@@ -44,7 +44,7 @@ export function MoodDock({ lang, editing, onCancelEdit }: MoodDockProps) {
     const ta = taRef.current;
     if (!ta) return;
     ta.style.height = 'auto';
-    ta.style.height = Math.min(ta.scrollHeight, 96) + 'px';
+    ta.style.height = Math.min(ta.scrollHeight, 110) + 'px';
   }, [text]);
 
   const busy = createMood.isPending || updateMood.isPending;
