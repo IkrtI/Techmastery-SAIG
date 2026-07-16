@@ -7,6 +7,7 @@ describe('containsProfanity', () => {
     expect(containsProfanity('เหี้ยยยยยย')).toBe(true);
     expect(containsProfanity('อีดอกเอ๊ย')).toBe(true);
     expect(containsProfanity('สัสจริง')).toBe(true);
+    expect(containsProfanity('ระยำจริงๆ')).toBe(true); // ำ NFKC-decomposes — lists must be normalized
     expect(containsProfanity('หีอะไรวะ')).toBe(true);
   });
 
@@ -23,6 +24,17 @@ describe('containsProfanity', () => {
     expect(containsProfanity('my class assignment is done')).toBe(false); // ass inside words
     expect(containsProfanity('the assistant helped a lot')).toBe(false);
     expect(containsProfanity('สอบ Circuit Analysis ยากมาก')).toBe(false);
+    expect(containsProfanity('ดอกไม้เหี่ยวเฉา')).toBe(false); // เหี่ยว ≠ เหี่ย
+    expect(containsProfanity('สัดส่วนร่างกาย')).toBe(false);
+    expect(containsProfanity('บ้านอยู่ห่างมหาลัย')).toBe(false);
+  });
+
+  it('catches separator-obfuscated Thai and expanded lists', () => {
+    expect(containsProfanity('เ หี้ ย')).toBe(true);
+    expect(containsProfanity('ค.ว.ย')).toBe(true);
+    expect(containsProfanity('ตอแหลชัดๆ')).toBe(true);
+    expect(containsProfanity('เกรดออกมาชิบหายเลย')).toBe(true);
+    expect(containsProfanity('what a dumbass')).toBe(true);
   });
 });
 
@@ -37,6 +49,15 @@ describe('containsSelfHarm / containsHarm', () => {
   it('flags hostile phrases', () => {
     expect(containsHarm('ไปตาย')).toBe(true);
     expect(containsHarm('kys')).toBe(true);
+    expect(containsHarm('สมน้ำหน้า')).toBe(true);
+    expect(containsHarm('อ่อนแอก็แพ้ไป')).toBe(true);
+    expect(containsHarm('go rot in hell')).toBe(true);
+  });
+
+  it('flags expanded self-harm phrases incl. apostrophes', () => {
+    expect(containsSelfHarm("i don't want to live")).toBe(true);
+    expect(containsSelfHarm('อยากโดดตึก')).toBe(true);
+    expect(containsSelfHarm('เหนื่อยจนไม่อยากหายใจ')).toBe(true);
   });
 
   it('does not flag ordinary sadness or empathy', () => {
