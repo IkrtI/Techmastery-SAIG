@@ -218,6 +218,19 @@
 .mm-react__emoji{font-size:16px;line-height:1;flex:none}
 .mm-react__count{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:11px;color:var(--text-muted)}
 .mm-react[disabled]{opacity:.6;cursor:default}
+.mm-reactadd{position:relative;display:inline-flex}
+.mm-react--add{padding:5px 9px;color:var(--text-muted)}
+.mm-react--add svg{width:16px;height:16px;display:block}
+.mm-react--add:hover{color:var(--text-body)}
+.mm-reactpicker{position:absolute;left:0;bottom:calc(100% + 6px);z-index:30;display:flex;gap:2px;padding:5px;
+  background:var(--surface-card);border:1px solid var(--border);border-radius:var(--radius-full);
+  box-shadow:var(--shadow-modal);animation:rgPopIn 160ms ease-out both;transform-origin:bottom left}
+.mm-reactpicker__opt{width:36px;height:36px;border-radius:var(--radius-full);border:none;background:transparent;
+  font-size:19px;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
+  touch-action:manipulation;transition:background var(--dur-fast) ease,transform 120ms ease}
+.mm-reactpicker__opt:hover{background:var(--surface-muted);transform:scale(1.12)}
+.mm-reactpicker__opt.is-active{background:var(--seg-active-bg)}
+.mm-reactpicker__opt:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 .mm-comments{display:flex;flex-direction:column;gap:10px;padding-top:10px;border-top:1px solid var(--border);animation:rgCardIn 220ms ease-out both}
 .mm-comments__skel{display:flex;flex-direction:column;gap:8px;animation:rgSkel 1.5s ease-in-out infinite}
 .mm-comments__skel span{display:block;height:12px;border-radius:4px;background:var(--surface-muted)}
@@ -350,7 +363,7 @@
   .mm-landing__glow,.mm-brand__dot,.mm-transit__dot{animation:none}
   .mm-moodcard{animation:none}
   .mm-sheet{animation:none}
-  .mm-menu__panel,.mm-moodcard__menu,.mm-scrim,.mm-modal,.mm-comments{animation:none}
+  .mm-menu__panel,.mm-moodcard__menu,.mm-scrim,.mm-modal,.mm-comments,.mm-reactpicker{animation:none}
   .mm-btn:active,.mm-chip:active,.mm-react:active,.mm-themebtn:active{transform:none}
   .mm-glowlayer{transition:none}
   .mm-stats__seg{transition:none}
