@@ -1,5 +1,5 @@
+import { useEffect, useRef, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { SegmentedControl } from '@/components/core/SegmentedControl';
 import { useAuthStore } from '@/stores/authStore';
 import { useLangStore, t, type Lang } from '@/lib/i18n';
 import { useThemeStore } from '@/stores/themeStore';
@@ -57,58 +57,98 @@ export function ThemeToggle({ lang }: { lang: Lang }) {
 }
 
 export function Header() {
-  const { lang, setLang } = useLangStore();
-  const navigate = useNavigate();
+  const { lang } = useLangStore();
   const mobile = useIsMobile();
   const links = useNavLinks(lang);
-  const doLogout = () => void logout().then(() => navigate('/login'));
 
   return (
     <header className="mm-header">
       <Brand />
       {!mobile && (
-        <>
-          <nav className="mm-nav">
-            {links.map((l) => (
-              <NavLink key={l.to} to={l.to} end={l.to === '/'} className={({ isActive }) => 'mm-nav__item' + (isActive ? ' is-active' : '')}>
-                <span className="mm-nav__dot" />
-                {l.label}
-              </NavLink>
-            ))}
-          </nav>
-          <div className="mm-header__right">
-          <ThemeToggle lang={lang} />
-            <SegmentedControl
-              options={[
-                { value: 'th', label: 'TH' },
-                { value: 'en', label: 'EN' },
-              ]}
-              value={lang}
-              onChange={(v) => setLang(v as Lang)}
-            />
-            <button className="mm-logout" onClick={doLogout}>
-              {t('logout', lang)}
-            </button>
-          </div>
-        </>
+        <nav className="mm-nav">
+          {links.map((l) => (
+            <NavLink key={l.to} to={l.to} end={l.to === '/'} className={({ isActive }) => 'mm-nav__item' + (isActive ? ' is-active' : '')}>
+              <span className="mm-nav__dot" />
+              {l.label}
+            </NavLink>
+          ))}
+        </nav>
       )}
-      {mobile && (
-        <div className="mm-header__right">
-          <ThemeToggle lang={lang} />
-          <SegmentedControl
-            options={[
-              { value: 'th', label: 'TH' },
-              { value: 'en', label: 'EN' },
-            ]}
-            value={lang}
-            onChange={(v) => setLang(v as Lang)}
-          />
-          <button className="mm-logout" onClick={doLogout}>
+      <HeaderMenu />
+    </header>
+  );
+}
+
+const DotsIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor">
+    <circle cx="12" cy="5" r="1.7" />
+    <circle cx="12" cy="12" r="1.7" />
+    <circle cx="12" cy="19" r="1.7" />
+  </svg>
+);
+
+/** Single header menu: theme, language, logout. */
+function HeaderMenu() {
+  const { lang, setLang } = useLangStore();
+  const { theme, setTheme } = useThemeStore();
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  const dark = theme === 'dark';
+  return (
+    <div className="mm-menu" ref={ref}>
+      <button
+        type="button"
+        className="mm-themebtn"
+        aria-label={t('menu', lang)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <DotsIcon />
+      </button>
+      {open && (
+        <div className="mm-menu__panel" role="menu">
+          <button type="button" role="menuitem" className="mm-menu__row" onClick={() => setTheme(dark ? 'light' : 'dark')}>
+            <span>{t('themeLabel', lang)}</span>
+            <span className="mm-menu__val">
+              {dark ? <MoonIcon /> : <SunIcon />}
+              {dark ? t('themeDark', lang) : t('themeLight', lang)}
+            </span>
+          </button>
+          <button type="button" role="menuitem" className="mm-menu__row" onClick={() => setLang(lang === 'th' ? 'en' : 'th')}>
+            <span>{t('langLabel', lang)}</span>
+            <span className="mm-menu__val">{lang === 'th' ? 'TH' : 'EN'}</span>
+          </button>
+          <div className="mm-menu__divider" />
+          <button
+            type="button"
+            role="menuitem"
+            className="mm-menu__row mm-menu__row--danger"
+            onClick={() => void logout().then(() => navigate('/login'))}
+          >
             {t('logout', lang)}
           </button>
         </div>
       )}
-    </header>
+    </div>
   );
 }
 

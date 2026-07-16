@@ -73,6 +73,23 @@
 .mm-themebtn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 .mm-themebtn svg{width:16px;height:16px}
 
+/* --- Header menu ---------------------------------------------------- */
+.mm-menu{position:relative;flex:none}
+.mm-menu__panel{position:absolute;right:0;top:calc(100% + 8px);z-index:60;min-width:200px;padding:6px;
+  background:var(--surface-card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-modal);
+  display:flex;flex-direction:column;gap:2px}
+.mm-menu__row{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:10px 12px;
+  border:none;background:transparent;border-radius:var(--radius-sm);cursor:pointer;font-family:var(--font-sans);
+  font-size:13.5px;font-weight:600;color:var(--text-body);text-align:left;touch-action:manipulation;
+  transition:background var(--dur-fast) ease}
+.mm-menu__row:hover{background:var(--surface-muted)}
+.mm-menu__row:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
+.mm-menu__row--danger{color:var(--destructive)}
+.mm-menu__row--danger:hover{background:var(--destructive-tint)}
+.mm-menu__val{display:inline-flex;align-items:center;gap:6px;color:var(--text-muted);font-weight:500;font-size:12.5px}
+.mm-menu__val svg{width:14px;height:14px}
+.mm-menu__divider{height:1px;background:var(--border);margin:4px 6px}
+
 /* --- Mood chip (dot + label [+count]) ---------------------------- */
 .mm-chip{display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:var(--radius-full);border:1px solid var(--border);
   background:transparent;color:var(--text-secondary);font-family:var(--font-sans);font-size:12px;font-weight:600;cursor:pointer;
@@ -245,7 +262,7 @@
 .mm-modal__footer{display:flex;justify-content:flex-end;gap:10px}
 
 /* --- Toast ---------------------------------------------------------------------------- */
-.mm-toast{position:fixed;left:50%;bottom:88px;transform:translateX(-50%);z-index:90;display:flex;align-items:center;gap:8px;
+.mm-toast{position:fixed;left:50%;top:calc(var(--header-height) + 14px);transform:translateX(-50%);z-index:90;display:flex;align-items:center;gap:8px;
   padding:10px 16px;border-radius:var(--radius-full);background:var(--surface-card);border:1px solid var(--success-border);
   box-shadow:var(--shadow-toast)}
 .mm-toast__dot{width:8px;height:8px;border-radius:var(--radius-full);background:var(--success)}
