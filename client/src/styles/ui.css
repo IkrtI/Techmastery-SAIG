@@ -183,8 +183,11 @@
   font-size:17px;line-height:1;cursor:pointer;flex:none;transition:all var(--dur-fast) ease}
 .mm-moodcard__kebab:hover{background:var(--surface-muted);color:var(--text-body)}
 .mm-moodcard__text{margin:0;font-size:14.5px;line-height:1.55;color:var(--text-body);text-wrap:pretty;white-space:pre-wrap;overflow-wrap:anywhere}
-.mm-moodcard__actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding-top:4px;border-top:1px solid var(--border)}
-.mm-moodcard__confirmq{margin-right:auto;font-size:12.5px;color:var(--text-secondary)}
+.mm-moodcard__kebabwrap{position:relative;flex:none}
+.mm-moodcard__menu{position:absolute;right:0;top:calc(100% + 6px);z-index:30;min-width:150px;display:flex;flex-direction:column;gap:6px;
+  padding:8px;background:var(--surface-card);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-modal)}
+.mm-moodcard__menu .mm-btn{justify-content:center}
+.mm-moodcard__confirmq{font-size:12.5px;color:var(--text-secondary);text-align:center;padding:2px 0}
 
 /* --- Reactions + comments -------------------------------------------------- */
 .mm-moodcard__engage{display:flex;flex-wrap:wrap;gap:6px;align-items:center}

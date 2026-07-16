@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { moodMeta, moodVars } from '@/lib/moodMeta';
 import { t, relTime, type Lang, type StringKey } from '@/lib/i18n';
 import { useToggleReaction } from '@/hooks/queries';
@@ -37,7 +37,20 @@ export function MoodCard({ post, lang, isMine = false, busy = false, onEdit, onD
   const [menu, setMenu] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
   const toggleReaction = useToggleReaction(post.id);
+
+  useEffect(() => {
+    if (!menu) return;
+    const close = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenu(false);
+        setConfirming(false);
+      }
+    };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [menu]);
 
   return (
     <article className="mm-card mm-moodcard" style={moodVars(post.moodType) as CSSProperties}>
@@ -50,17 +63,62 @@ export function MoodCard({ post, lang, isMine = false, busy = false, onEdit, onD
           <span className="mm-moodcard__badge">{badgeText(post, lang)}</span>
         </div>
         <span className="mm-moodcard__time">{relTime(post.createdAt, lang)}</span>
-        {isMine && !confirming && (
-          <button
-            type="button"
-            className="mm-moodcard__kebab"
-            aria-label={t('edit', lang) + ' / ' + t('delete', lang)}
-            aria-haspopup="true"
-            aria-expanded={menu}
-            onClick={() => setMenu((v) => !v)}
-          >
-            ⋯
-          </button>
+        {isMine && (
+          <div className="mm-moodcard__kebabwrap" ref={menuRef}>
+            <button
+              type="button"
+              className="mm-moodcard__kebab"
+              aria-label={t('edit', lang) + ' / ' + t('delete', lang)}
+              aria-haspopup="true"
+              aria-expanded={menu}
+              onClick={() => {
+                setMenu((v) => !v);
+                setConfirming(false);
+              }}
+            >
+              ⋯
+            </button>
+            {menu && (
+              <div className="mm-moodcard__menu" role="menu">
+                {!confirming ? (
+                  <>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="mm-btn mm-btn--outline mm-btn--sm"
+                      onClick={() => {
+                        setMenu(false);
+                        onEdit?.();
+                      }}
+                    >
+                      {t('edit', lang)}
+                    </button>
+                    <button type="button" role="menuitem" className="mm-btn mm-btn--danger mm-btn--sm" onClick={() => setConfirming(true)}>
+                      {t('delete', lang)}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <span className="mm-moodcard__confirmq">{t('deleteConfirmQ', lang)}</span>
+                    <button type="button" className="mm-btn mm-btn--danger-solid mm-btn--sm" disabled={busy} onClick={() => onDelete?.()}>
+                      {t('confirm', lang)}
+                    </button>
+                    <button
+                      type="button"
+                      className="mm-btn mm-btn--outline mm-btn--sm"
+                      disabled={busy}
+                      onClick={() => {
+                        setConfirming(false);
+                        setMenu(false);
+                      }}
+                    >
+                      {t('cancel', lang)}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         )}
       </div>
       <p className="mm-moodcard__text">{post.text}</p>
@@ -94,41 +152,6 @@ export function MoodCard({ post, lang, isMine = false, busy = false, onEdit, onD
 
       {commentsOpen && <CommentThread postId={post.id} lang={lang} />}
 
-      {menu && !confirming && (
-        <div className="mm-moodcard__actions">
-          <button
-            type="button"
-            className="mm-btn mm-btn--outline mm-btn--sm"
-            onClick={() => {
-              setMenu(false);
-              onEdit?.();
-            }}
-          >
-            {t('edit', lang)}
-          </button>
-          <button
-            type="button"
-            className="mm-btn mm-btn--danger mm-btn--sm"
-            onClick={() => {
-              setMenu(false);
-              setConfirming(true);
-            }}
-          >
-            {t('delete', lang)}
-          </button>
-        </div>
-      )}
-      {confirming && (
-        <div className="mm-moodcard__actions">
-          <span className="mm-moodcard__confirmq">{t('deleteConfirmQ', lang)}</span>
-          <button type="button" className="mm-btn mm-btn--danger-solid mm-btn--sm" disabled={busy} onClick={() => onDelete?.()}>
-            {t('confirm', lang)}
-          </button>
-          <button type="button" className="mm-btn mm-btn--outline mm-btn--sm" disabled={busy} onClick={() => setConfirming(false)}>
-            {t('cancel', lang)}
-          </button>
-        </div>
-      )}
     </article>
   );
 }
