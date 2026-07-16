@@ -1,0 +1,99 @@
+import { useState } from 'react';
+import { Select } from '@/components/core/Select';
+import { Input } from '@/components/core/Input';
+import { useFaculties } from '@/hooks/queries';
+import { onboardingSchema } from '@/lib/schemas';
+import { yearFromStudentId } from '@/lib/studentYear';
+import { t, type Lang } from '@/lib/i18n';
+
+export interface ProfileFormState {
+  facultyId: string;
+  setFacultyId: (v: string) => void;
+  major: string;
+  setMajor: (v: string) => void;
+  year: number | null;
+  setYear: (v: number) => void;
+  yearAuto: boolean;
+  valid: boolean;
+}
+
+/** Shared faculty/major/year form state. Year is pre-selected from the student ID when possible. */
+export function useProfileForm(initial: { facultyId?: string; major?: string; year?: number | null; studentId?: string | null }): ProfileFormState {
+  const [facultyId, setFacultyId] = useState(initial.facultyId ?? '');
+  const [major, setMajor] = useState(initial.major ?? '');
+  const auto = initial.year == null ? yearFromStudentId(initial.studentId) : null;
+  const [year, setYear] = useState<number | null>(initial.year ?? auto);
+  const [touchedYear, setTouchedYear] = useState(false);
+  return {
+    facultyId,
+    setFacultyId,
+    major,
+    setMajor,
+    year,
+    setYear: (v) => {
+      setTouchedYear(true);
+      setYear(v);
+    },
+    yearAuto: auto != null && !touchedYear && initial.year == null,
+    valid: onboardingSchema.safeParse({ facultyId, major, year }).success,
+  };
+}
+
+/** Faculty select + major input with suggestion chips + year chips. */
+export function ProfileFormFields({ form, lang }: { form: ProfileFormState; lang: Lang }) {
+  const { data: faculties } = useFaculties();
+  const faculty = faculties?.find((f) => f.id === form.facultyId);
+  const query = form.major.trim().toLocaleLowerCase('en-US');
+  const suggestions = (faculty?.knownMajors ?? []).filter((m) => !query || m.toLocaleLowerCase('en-US').includes(query)).slice(0, 6);
+  return (
+    <>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <label className="mm-label">{t('faculty', lang)}</label>
+        <Select
+          value={form.facultyId}
+          onChange={(e) => {
+            form.setFacultyId(e.target.value);
+            form.setMajor('');
+          }}
+          options={[
+            { value: '', label: t('selectFaculty', lang) },
+            ...(faculties ?? []).map((f) => ({ value: f.id, label: lang === 'en' ? f.nameEn : f.nameTh })),
+          ]}
+        />
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <label className="mm-label">{t('majorLabel', lang)}</label>
+        <Input placeholder={t('majorPh', lang)} value={form.major} disabled={!form.facultyId} onChange={(e) => form.setMajor(e.target.value)} />
+        {suggestions.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {suggestions.map((s) => (
+              <button key={s} type="button" className="mm-chip mm-chip--suggest" onClick={() => form.setMajor(s)}>
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <label className="mm-label">{t('yearLabel', lang)}</label>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((y) => (
+            <button
+              key={y}
+              type="button"
+              className={'mm-chip mm-chip--year' + (form.year === y ? ' is-active' : '')}
+              aria-pressed={form.year === y}
+              onClick={() => form.setYear(y)}
+            >
+              {t('yearPrefix', lang)}
+              {y}
+            </button>
+          ))}
+        </div>
+        {form.yearAuto && <span className="mm-label--xs mm-label">{t('yearAutoHint', lang)}</span>}
+      </div>
+    </>
+  );
+}

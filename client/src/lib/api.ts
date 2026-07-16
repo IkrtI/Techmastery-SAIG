@@ -44,6 +44,11 @@ export async function bootstrapSession(): Promise<boolean> {
   }
 }
 
+/** Rotate the access token now (e.g. right after onboarding flips a JWT claim). */
+export async function refreshSession(): Promise<void> {
+  await refreshAccessToken();
+}
+
 export async function logout(): Promise<void> {
   try {
     await axios.post('/api/auth/logout');
@@ -56,15 +61,23 @@ export async function logout(): Promise<void> {
 api.interceptors.response.use(undefined, async (error: AxiosError<ApiErrorBody>) => {
   const original = error.config as (InternalAxiosRequestConfig & { _retried?: boolean }) | undefined;
   const code = error.response?.data?.error?.code;
-  if (error.response?.status === 401 && code === 'TOKEN_EXPIRED' && original && !original._retried) {
+
+  // TOKEN_EXPIRED: rotate and replay. NOT_ONBOARDED can also be a stale JWT
+  // claim (onboarding just completed but the 15-min token predates it) — a
+  // refresh mints a token with the current claim, so retry once before
+  // treating it as a real onboarding gate.
+  const retryable = (error.response?.status === 401 && code === 'TOKEN_EXPIRED') || (error.response?.status === 403 && code === 'NOT_ONBOARDED');
+  if (retryable && original && !original._retried) {
     original._retried = true;
     try {
       const token = await refreshAccessToken();
       original.headers.Authorization = `Bearer ${token}`;
       return api(original);
     } catch {
-      await logout();
-      window.location.assign('/login');
+      if (code === 'TOKEN_EXPIRED') {
+        await logout();
+        window.location.assign('/login');
+      }
     }
   }
   throw error;

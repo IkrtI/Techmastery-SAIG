@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { MoodCard } from '@/components/mood/MoodCard';
 import { Button } from '@/components/core/Button';
 import { Composer, type ComposerValue } from '@/components/app/Composer';
+import { ProfileDialog } from '@/components/app/ProfileDialog';
 import { useCreateMood, useDeleteMood, useMoodsInfinite, useUpdateMood } from '@/hooks/queries';
 import { useLangStore, t, relTime } from '@/lib/i18n';
 import { useToastStore } from '@/stores/toastStore';
@@ -20,6 +21,7 @@ export function MyMoodsPage() {
   const deleteMood = useDeleteMood();
   const [composerOpen, setComposerOpen] = useState(false);
   const [editing, setEditing] = useState<MoodPublic | null>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   const items = feed.data?.pages.flatMap((p) => p.items) ?? [];
 
@@ -47,11 +49,16 @@ export function MyMoodsPage() {
 
   return (
     <div className="mm-page">
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginBottom: 18 }}>
-        <h1 className="mm-page__title">{t('myMoods', lang)}</h1>
-        <p className="mm-page__sub">
-          {items.length} {t('mineCountSuffix', lang)}
-        </p>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 18 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <h1 className="mm-page__title">{t('myMoods', lang)}</h1>
+          <p className="mm-page__sub">
+            {items.length} {t('mineCountSuffix', lang)}
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => setProfileOpen(true)}>
+          {t('editProfile', lang)}
+        </Button>
       </div>
 
       {feed.isLoading ? (
@@ -122,6 +129,8 @@ export function MyMoodsPage() {
           setEditing(null);
         }}
       />
+
+      {profileOpen && <ProfileDialog open lang={lang} onClose={() => setProfileOpen(false)} />}
     </div>
   );
 }
