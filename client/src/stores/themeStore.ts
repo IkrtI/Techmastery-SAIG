@@ -6,7 +6,7 @@ function apply(theme: Theme): void {
   document.documentElement.dataset.theme = theme;
 }
 
-const initial: Theme = (localStorage.getItem('mm-theme') as Theme) || 'dark';
+const initial: Theme = (localStorage.getItem('mm-theme') as Theme) || 'light';
 apply(initial);
 
 interface ThemeState {
