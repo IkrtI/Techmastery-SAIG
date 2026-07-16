@@ -115,34 +115,36 @@ function buildPosts(): { moodType: MoodType; text: string }[] {
 async function main(): Promise<void> {
   await connectDb();
   const faculties = await Faculty.find();
-  if (faculties.length === 0) throw new Error('No faculties — run the main seed first');
+  // Real student faculties only: has a code, has curricula, not the staff entry.
+  const pool = faculties.filter((f) => f.code && f.slug !== 'staff' && (f.knownMajors?.length ?? 0) > 0);
+  if (pool.length === 0) throw new Error('No seeded faculties with majors — run the main seed first');
+
+  // Wipe previous mock generations entirely (users + their posts).
+  const oldMocks = await User.find({ email: /^mock/ });
+  const removed = await Mood.deleteMany({ author: { $in: oldMocks.map((u) => u._id) } });
+  await User.deleteMany({ _id: { $in: oldMocks.map((u) => u._id) } });
 
   const users: UserDoc[] = [];
   for (let i = 1; i <= 12; i++) {
-    const fac = pick(faculties);
-    const majors: string[] = fac.knownMajors?.length ? fac.knownMajors : ['วิศวกรรมคอมพิวเตอร์'];
-    const major = normalizeMajorDisplay(pick(majors));
-    const email = `mock68${String(i).padStart(5, '0')}@kmitl.ac.th`;
-    const user = await User.findOneAndUpdate(
-      { email },
-      {
-        email,
-        studentId: `68${String(i).padStart(5, '0')}`,
-        displayName: `Mock Student ${i}`,
-        faculty: fac._id,
-        major,
-        majorNormalized: normalizeMajorKey(major),
-        year: 1 + Math.floor(rand() * 4),
-        role: 'user',
-        onboarded: true,
-      },
-      { upsert: true, new: true },
-    );
+    const fac = pick(pool);
+    // Major always comes from the faculty's own curricula, and the student ID
+    // embeds the faculty code (digits 3-4) like real KMITL IDs.
+    const major = normalizeMajorDisplay(pick(fac.knownMajors));
+    const studentId = `68${fac.code}${String(i).padStart(4, '0')}`;
+    const email = `mock${studentId}@kmitl.ac.th`;
+    const user = await User.create({
+      email,
+      studentId,
+      displayName: `Mock Student ${i}`,
+      faculty: fac._id,
+      major,
+      majorNormalized: normalizeMajorKey(major),
+      year: 1 + Math.floor(rand() * 4),
+      role: 'user',
+      onboarded: true,
+    });
     users.push(user);
   }
-
-  const mockIds = users.map((u) => u._id);
-  const removed = await Mood.deleteMany({ author: { $in: mockIds } });
 
   const now = Date.now();
   const docs = buildPosts().map((p) => {
