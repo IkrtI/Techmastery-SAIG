@@ -4,3 +4,6 @@ dist/
 .env.*
 !.env.example
 .DS_Store
+
+# local AI tooling
+.kiro/
