@@ -8,6 +8,8 @@ import { connectDb, disconnectDb } from '../config/db.js';
 import { Faculty } from '../models/Faculty.js';
 import { User, type UserDoc } from '../models/User.js';
 import { Mood, type MoodType } from '../models/Mood.js';
+import { Comment } from '../models/Comment.js';
+import { Reaction, REACTION_TYPES } from '../models/Reaction.js';
 import { normalizeMajorDisplay, normalizeMajorKey } from '../lib/serialize.js';
 
 const TARGET = 250;
@@ -119,10 +121,16 @@ async function main(): Promise<void> {
   const pool = faculties.filter((f) => f.code && f.slug !== 'staff' && (f.knownMajors?.length ?? 0) > 0);
   if (pool.length === 0) throw new Error('No seeded faculties with majors — run the main seed first');
 
-  // Wipe previous mock generations entirely (users + their posts).
+  // Wipe previous mock generations entirely (users, posts, engagement).
   const oldMocks = await User.find({ email: /^mock/ });
-  const removed = await Mood.deleteMany({ author: { $in: oldMocks.map((u) => u._id) } });
-  await User.deleteMany({ _id: { $in: oldMocks.map((u) => u._id) } });
+  const oldIds = oldMocks.map((u) => u._id);
+  const oldPostIds = (await Mood.find({ author: { $in: oldIds } }).select('_id')).map((m) => m._id);
+  const [removed] = await Promise.all([
+    Mood.deleteMany({ _id: { $in: oldPostIds } }),
+    Comment.deleteMany({ $or: [{ post: { $in: oldPostIds } }, { author: { $in: oldIds } }] }),
+    Reaction.deleteMany({ $or: [{ post: { $in: oldPostIds } }, { user: { $in: oldIds } }] }),
+    User.deleteMany({ _id: { $in: oldIds } }),
+  ]);
 
   const users: UserDoc[] = [];
   for (let i = 1; i <= 12; i++) {
@@ -170,7 +178,61 @@ async function main(): Promise<void> {
   // (mongoose timestamps would overwrite it with now).
   await Mood.collection.insertMany(docs);
 
-  console.log(`mock users: ${users.length}, old mock posts removed: ${removed.deletedCount}, posts inserted: ${docs.length} across ${DAYS} days`);
+  // Sprinkle engagement on a fraction of posts — not all, like a real feed.
+  const ENCOURAGEMENTS = [
+    'สู้ๆ นะ เป็นกำลังใจให้', 'เข้าใจความรู้สึกเลย เคยผ่านมาก่อน', 'เก่งมากแล้ววันนี้',
+    'พักผ่อนเยอะๆ นะ', 'ยินดีด้วยนะ เก่งมาก', 'เดี๋ยวมันก็ผ่านไป สู้ๆ',
+    'ขอให้พรุ่งนี้เป็นวันที่ดีนะ', 'อย่าลืมดูแลตัวเองด้วยนะ', 'เป็นกำลังใจให้เสมอเลย',
+    'รู้สึกเหมือนกันเลยช่วงนี้', 'เก็บแรงไว้สู้ต่อนะ', 'ภูมิใจในตัวเองได้เลย',
+  ];
+  const reactionDocs = [];
+  const commentDocs = [];
+  for (const d of docs) {
+    if (rand() < 0.45) {
+      const n = 1 + Math.floor(rand() * 4);
+      const others = users.filter((u) => !u._id.equals(d.author));
+      for (let i = others.length - 1; i > 0; i--) {
+        const j = Math.floor(rand() * (i + 1));
+        [others[i], others[j]] = [others[j], others[i]];
+      }
+      for (const u of others.slice(0, n)) {
+        reactionDocs.push({
+          _id: new Types.ObjectId(),
+          post: d._id,
+          user: u._id,
+          type: REACTION_TYPES[Math.floor(rand() * REACTION_TYPES.length)],
+          createdAt: d.createdAt,
+          updatedAt: d.createdAt,
+          __v: 0,
+        });
+      }
+    }
+    if (rand() < 0.3) {
+      const n = 1 + Math.floor(rand() * 3);
+      for (let k = 0; k < n; k++) {
+        const u = pick(users);
+        if (u._id.equals(d.author)) continue;
+        const at = new Date(d.createdAt.getTime() + 60_000 + Math.floor(rand() * 3_000_000));
+        commentDocs.push({
+          _id: new Types.ObjectId(),
+          post: d._id,
+          author: u._id,
+          text: pick(ENCOURAGEMENTS),
+          faculty: u.faculty,
+          year: u.year,
+          createdAt: at,
+          updatedAt: at,
+          __v: 0,
+        });
+      }
+    }
+  }
+  if (reactionDocs.length > 0) await Reaction.collection.insertMany(reactionDocs);
+  if (commentDocs.length > 0) await Comment.collection.insertMany(commentDocs);
+
+  console.log(
+    `mock users: ${users.length}, old mock posts removed: ${removed.deletedCount}, posts inserted: ${docs.length} across ${DAYS} days, reactions: ${reactionDocs.length}, comments: ${commentDocs.length}`,
+  );
   await disconnectDb();
 }
 

@@ -14,7 +14,8 @@ export interface ProfileFormState {
   setMajor: (v: string) => void;
   year: number | null;
   setYear: (v: number) => void;
-  yearAuto: boolean;
+  /** Year derived from the student ID — chips hidden, value pinned. */
+  yearLocked: boolean;
   valid: boolean;
 }
 
@@ -22,9 +23,8 @@ export interface ProfileFormState {
 export function useProfileForm(initial: { facultyId?: string; major?: string; year?: number | null; studentId?: string | null }): ProfileFormState {
   const [facultyId, setFacultyId] = useState(initial.facultyId ?? '');
   const [major, setMajor] = useState(initial.major ?? '');
-  const auto = initial.year == null ? yearFromStudentId(initial.studentId) : null;
-  const [year, setYear] = useState<number | null>(initial.year ?? auto);
-  const [touchedYear, setTouchedYear] = useState(false);
+  const locked = yearFromStudentId(initial.studentId);
+  const [year, setYear] = useState<number | null>(locked ?? initial.year ?? null);
   return {
     studentId: initial.studentId ?? null,
     facultyId,
@@ -33,10 +33,9 @@ export function useProfileForm(initial: { facultyId?: string; major?: string; ye
     setMajor,
     year,
     setYear: (v) => {
-      setTouchedYear(true);
-      setYear(v);
+      if (locked == null) setYear(v);
     },
-    yearAuto: auto != null && !touchedYear && initial.year == null,
+    yearLocked: locked != null,
     valid: onboardingSchema.safeParse({ facultyId, major, year }).success,
   };
 }
@@ -57,20 +56,33 @@ export function ProfileFormFields({ form, lang }: { form: ProfileFormState; lang
   return (
     <>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <label className="mm-label">{t('faculty', lang)}</label>
-        <Select
-          value={form.facultyId}
-          disabled={!!locked}
-          onChange={(e) => {
-            form.setFacultyId(e.target.value);
-            form.setMajor('');
-          }}
-          options={[
-            { value: '', label: t('selectFaculty', lang) },
-            ...(faculties ?? []).map((f) => ({ value: f.id, label: lang === 'en' ? f.nameEn : f.nameTh })),
-          ]}
-        />
-        {locked && <span className="mm-label--xs mm-label">{t('facultyAutoHint', lang)}</span>}
+        <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <label className="mm-label">{t('faculty', lang)}</label>
+            <Select
+              value={form.facultyId}
+              disabled={!!locked}
+              onChange={(e) => {
+                form.setFacultyId(e.target.value);
+                form.setMajor('');
+              }}
+              options={[
+                { value: '', label: t('selectFaculty', lang) },
+                ...(faculties ?? []).map((f) => ({ value: f.id, label: lang === 'en' ? f.nameEn : f.nameTh })),
+              ]}
+            />
+          </div>
+          {form.yearLocked && form.year != null && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <label className="mm-label">{t('yearLabel', lang)}</label>
+              <span className="mm-yearlock">
+                {t('yearPrefix', lang)}
+                {form.year}
+              </span>
+            </div>
+          )}
+        </div>
+        {(locked || form.yearLocked) && <span className="mm-label--xs mm-label">{t('facultyAutoHint', lang)}</span>}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -87,24 +99,25 @@ export function ProfileFormFields({ form, lang }: { form: ProfileFormState; lang
         )}
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <label className="mm-label">{t('yearLabel', lang)}</label>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((y) => (
-            <button
-              key={y}
-              type="button"
-              className={'mm-chip mm-chip--year' + (form.year === y ? ' is-active' : '')}
-              aria-pressed={form.year === y}
-              onClick={() => form.setYear(y)}
-            >
-              {t('yearPrefix', lang)}
-              {y}
-            </button>
-          ))}
+      {!form.yearLocked && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <label className="mm-label">{t('yearLabel', lang)}</label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((y) => (
+              <button
+                key={y}
+                type="button"
+                className={'mm-chip mm-chip--year' + (form.year === y ? ' is-active' : '')}
+                aria-pressed={form.year === y}
+                onClick={() => form.setYear(y)}
+              >
+                {t('yearPrefix', lang)}
+                {y}
+              </button>
+            ))}
+          </div>
         </div>
-        {form.yearAuto && <span className="mm-label--xs mm-label">{t('yearAutoHint', lang)}</span>}
-      </div>
+      )}
     </>
   );
 }

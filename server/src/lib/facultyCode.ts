@@ -14,3 +14,17 @@ export function facultyCodeFromStudentId(studentId: string | null | undefined): 
 export function isStaffId(studentId: string | null | undefined): boolean {
   return !!studentId && !/^\d+$/.test(studentId);
 }
+
+/**
+ * Infer year-of-study from the entry year (digits 1-2, BE): the Thai academic
+ * year starts in June, so Jan-May counts as the previous academic year.
+ */
+export function yearFromStudentId(studentId: string | null | undefined, now: Date = new Date()): number | null {
+  const m = /^(\d{2})\d{6,}/.exec(studentId ?? '');
+  if (!m) return null;
+  const entryBE = 2500 + Number(m[1]);
+  const nowBE = now.getFullYear() + 543;
+  const academicBE = now.getMonth() + 1 >= 6 ? nowBE : nowBE - 1;
+  const year = academicBE - entryBE + 1;
+  return year >= 1 && year <= 8 ? year : null;
+}

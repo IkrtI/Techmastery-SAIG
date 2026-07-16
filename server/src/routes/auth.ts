@@ -15,7 +15,7 @@ import {
   signAccessToken,
 } from '../services/tokens.js';
 import { normalizeMajorDisplay, normalizeMajorKey, toUserPublic } from '../lib/serialize.js';
-import { facultyCodeFromStudentId, isStaffId, STAFF_FACULTY_SLUG, STAFF_MAJOR } from '../lib/facultyCode.js';
+import { facultyCodeFromStudentId, isStaffId, STAFF_FACULTY_SLUG, STAFF_MAJOR, yearFromStudentId } from '../lib/facultyCode.js';
 import { onboardingBodySchema } from './schemas.js';
 
 const REFRESH_COOKIE = 'refresh_token';
@@ -193,6 +193,8 @@ authRouter.patch(
       }
       if (!faculty) faculty = await Faculty.findById(facultyId);
       if (!faculty) throw new ApiError('NOT_FOUND', 'Faculty not found');
+      // Year is identity-locked the same way (entry year = digits 1-2).
+      const lockedYear = yearFromStudentId(me.studentId);
       const display = normalizeMajorDisplay(major);
       if (!display) throw new ApiError('VALIDATION_ERROR', 'Invalid major');
       const user = await User.findByIdAndUpdate(
@@ -202,7 +204,7 @@ authRouter.patch(
             faculty: faculty._id,
             major: display,
             majorNormalized: normalizeMajorKey(display),
-            year,
+            year: lockedYear ?? year,
             onboarded: true,
           },
         },

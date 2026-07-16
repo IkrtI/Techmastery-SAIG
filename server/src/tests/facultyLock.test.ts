@@ -48,10 +48,12 @@ describe('onboarding faculty lock', () => {
     const res = await request(app)
       .patch('/api/auth/onboarding')
       .set('Authorization', await bearerFor(user))
-      .send({ facultyId: it_._id.toString(), major: 'วิศวกรรมคอมพิวเตอร์', year: 2 })
+      .send({ facultyId: it_._id.toString(), major: 'วิศวกรรมคอมพิวเตอร์', year: 7 })
       .expect(200);
     expect(res.body.user.faculty.slug).toBe('engineering');
     expect(res.body.user.faculty.code).toBe('01');
+    // year is locked from the entry year (68 → year 2 in academic BE 2569)
+    expect(res.body.user.year).not.toBe(7);
   });
 
   it('staff accounts pin to the staff faculty', async () => {

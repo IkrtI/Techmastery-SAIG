@@ -90,7 +90,7 @@ const STRINGS = {
   reactHeart: { th: 'ส่งใจให้', en: 'Send love' },
   reactHug: { th: 'กอดๆ นะ', en: 'Hug' },
   reactHaha: { th: 'ฮาด้วย', en: 'Haha' },
-  facultyAutoHint: { th: 'ล็อกคณะอัตโนมัติจากรหัสนักศึกษา', en: 'Faculty locked from your student ID' },
+  facultyAutoHint: { th: 'ล็อกอัตโนมัติตามรหัสนักศึกษา', en: 'Locked from your student ID' },
   selfHarmTitle: { th: 'คุณโอเคไหมนะ?', en: 'Are you okay?' },
   selfHarmBody: {
     th: 'ขอบคุณที่กล้าพูดความรู้สึกออกมานะ คุณไม่ได้อยู่คนเดียว ข้อความแบบนี้ส่งลงฟีดไม่ได้ แต่มีคนที่พร้อมรับฟังคุณจริงๆ อยู่ตรงนี้',
