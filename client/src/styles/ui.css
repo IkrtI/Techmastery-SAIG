@@ -17,13 +17,13 @@
 .mm-modal__close,.mm-dock__cancel,.mm-fab,.mm-brand{touch-action:manipulation}
 .mm-moodcard__kebab:focus-visible,.mm-logout:focus-visible,.mm-modal__close:focus-visible,
 .mm-dock__cancel:focus-visible,.mm-nav__item:focus-visible,.mm-bottomnav__item:focus-visible,
-.mm-brand:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+.mm-brand:focus-visible{outline:2px solid var(--focus-ring);outline-offset:3px}
 
 /* --- Buttons -------------------------------------------------- */
 .mm-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:var(--radius-md);
   border:none;font-family:var(--font-sans);font-size:14px;font-weight:600;line-height:1;cursor:pointer;white-space:nowrap;
   transition:background var(--dur-fast) ease,border-color var(--dur-fast) ease,color var(--dur-fast) ease;-webkit-tap-highlight-color:transparent}
-.mm-btn:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+.mm-btn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:3px}
 .mm-btn[disabled]{opacity:.4;cursor:not-allowed;pointer-events:none}
 .mm-btn--primary{background:var(--primary);color:var(--primary-foreground)}
 .mm-btn--primary:hover{background:var(--primary-hover)}
@@ -62,15 +62,15 @@
 .mm-seg{display:inline-flex;align-items:center;gap:3px;padding:3px;border:1px solid var(--border);border-radius:var(--radius-full)}
 .mm-seg__opt{padding:5px 11px;border-radius:var(--radius-full);border:none;background:transparent;color:var(--text-muted);
   font-family:var(--font-sans);font-size:11px;font-weight:600;cursor:pointer;transition:all var(--dur-fast) ease}
-.mm-seg__opt.is-active{background:var(--info);color:var(--on-info)}
-.mm-seg__opt:focus-visible{outline:2px solid var(--ring);outline-offset:1px}
+.mm-seg__opt.is-active{background:var(--seg-active-bg);color:var(--seg-active-fg)}
+.mm-seg__opt:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 
 /* --- Mood chip (dot + label [+count]) ---------------------------- */
 .mm-chip{display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:var(--radius-full);border:1px solid var(--border);
   background:transparent;color:var(--text-secondary);font-family:var(--font-sans);font-size:12px;font-weight:600;cursor:pointer;
   transition:all var(--dur-fast) ease}
 .mm-chip.is-active{background:var(--_soft);border-color:var(--_accent);color:var(--text-body)}
-.mm-chip:focus-visible{outline:2px solid var(--ring);outline-offset:1px}
+.mm-chip:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 .mm-chip__dot{width:7px;height:7px;border-radius:var(--radius-full);background:var(--_accent);flex:none}
 .mm-chip__count{font-family:var(--font-mono);font-variant-numeric:tabular-nums;color:var(--text-muted)}
 .mm-chip--picker{padding:9px 13px;font-size:13px;

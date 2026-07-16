@@ -42,6 +42,9 @@
   --destructive-tint:      rgba(244, 63, 94, 0.12);
   --ring:                  #38bdf8;
   --primary-ring:          rgba(244, 63, 94, 0.18);
+  --focus-ring:            rgba(56, 189, 248, 0.55);
+  --seg-active-bg:         rgba(255, 255, 255, 0.12);
+  --seg-active-fg:         #e6edf3;
 
   /* --- MOOD SYSTEM (accent dot / soft chip / bg glow / ink text) */
   --mood-happy:          #fbbf24; --mood-happy-soft:    rgba(251, 191, 36, 0.16);  --mood-happy-glow:    rgba(251, 191, 36, 0.3);  --mood-happy-ink:    #fbbf24;
@@ -110,6 +113,9 @@
   --destructive-tint:      rgba(192, 69, 59, 0.1);
   --ring:                  rgba(59, 130, 246, 0.5);
   --primary-ring:          rgba(28, 28, 28, 0.14);
+  --focus-ring:            rgba(59, 130, 246, 0.4);
+  --seg-active-bg:         #1c1c1c;
+  --seg-active-fg:         #fcfbf8;
 
   /* mood dots/bars keep identity; soft chips lighter; ink darkened for cream */
   --mood-happy-soft:    rgba(251, 191, 36, 0.2);  --mood-happy-glow:    rgba(251, 191, 36, 0.22);  --mood-happy-ink:    #a16207;
