@@ -20,7 +20,6 @@ function Brand() {
   const navigate = useNavigate();
   return (
     <button className="mm-brand" onClick={() => navigate('/')} aria-label="Mood of the Major">
-      <span className="mm-brand__dot mm-brand__dot--sm" />
       <span className="mm-brand__name mm-brand__name--sm">
         Mood <b>of the Major</b>
       </span>
@@ -68,7 +67,6 @@ export function Header() {
         <nav className="mm-nav">
           {links.map((l) => (
             <NavLink key={l.to} to={l.to} end={l.to === '/'} className={({ isActive }) => 'mm-nav__item' + (isActive ? ' is-active' : '')}>
-              <span className="mm-nav__dot" />
               {l.label}
             </NavLink>
           ))}
