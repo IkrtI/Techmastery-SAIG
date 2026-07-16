@@ -2,6 +2,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/core/Button';
 import { SegmentedControl } from '@/components/core/SegmentedControl';
 import { useLangStore, t, type Lang, type StringKey } from '@/lib/i18n';
+import { useThemeStore, type Theme } from '@/stores/themeStore';
 
 const SSO_ERRORS: Record<string, StringKey> = {
   sso_state: 'ssoErrorState',
@@ -12,13 +13,22 @@ const SSO_ERRORS: Record<string, StringKey> = {
 /** Landing — dark hero with a drifting rose/sky glow and one CTA. */
 export function LoginPage() {
   const { lang, setLang } = useLangStore();
+  const { theme, setTheme } = useThemeStore();
   const [searchParams] = useSearchParams();
   const errorKey = SSO_ERRORS[searchParams.get('error') ?? ''];
   const [h1a, h1b] = t('landingH1', lang).split('\n');
   return (
     <div className="mm-landing">
       <div className="mm-landing__glow" aria-hidden="true" />
-      <div className="mm-landing__lang">
+      <div className="mm-landing__lang" style={{ display: 'flex', gap: 8 }}>
+        <SegmentedControl
+          options={[
+            { value: 'dark', label: t('themeDark', lang) },
+            { value: 'light', label: t('themeLight', lang) },
+          ]}
+          value={theme}
+          onChange={(v) => setTheme(v as Theme)}
+        />
         <SegmentedControl
           options={[
             { value: 'th', label: 'ไทย' },

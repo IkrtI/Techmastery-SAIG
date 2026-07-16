@@ -4,8 +4,8 @@ import { Button } from '@/components/core/Button';
 import { MoodCard } from '@/components/mood/MoodCard';
 import { MoodStats } from '@/components/mood/MoodStats';
 import { FilterBar, FilterDrawer, FilterTrigger } from '@/components/app/FilterBar';
-import { Composer, type ComposerValue } from '@/components/app/Composer';
-import { useCreateMood, useDeleteMood, useMoodsInfinite, useStats, useUpdateMood } from '@/hooks/queries';
+import { MoodDock } from '@/components/app/MoodDock';
+import { useDeleteMood, useMoodsInfinite, useStats } from '@/hooks/queries';
 import { useFilterStore, filtersFromSearchParams, filtersToSearchParams } from '@/stores/filterStore';
 import { useLangStore, t, relTime } from '@/lib/i18n';
 import { useToastStore } from '@/stores/toastStore';
@@ -60,11 +60,8 @@ export function FeedPage() {
 
   const stats = useStats(filters);
   const feed = useMoodsInfinite(filters);
-  const createMood = useCreateMood();
-  const updateMood = useUpdateMood();
   const deleteMood = useDeleteMood();
 
-  const [composerOpen, setComposerOpen] = useState(false);
   const [editing, setEditing] = useState<MoodPublic | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -86,30 +83,8 @@ export function FeedPage() {
   const items = feed.data?.pages.flatMap((p) => p.items) ?? [];
   const counts = stats.data?.counts ?? {};
 
-  const submitComposer = (value: ComposerValue) => {
-    if (editing) {
-      updateMood.mutate(
-        { id: editing.id, ...value },
-        {
-          onSuccess: () => {
-            setComposerOpen(false);
-            setEditing(null);
-            toast(t('toastSaved', lang));
-          },
-        },
-      );
-    } else {
-      createMood.mutate(value, {
-        onSuccess: () => {
-          setComposerOpen(false);
-          toast(t('toastPosted', lang));
-        },
-      });
-    }
-  };
-
   return (
-    <div className="mm-page">
+    <div className="mm-page mm-page--dock">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
         <h1 className="mm-page__title">{t('feedTitle', lang)}</h1>
         {mobile && <FilterTrigger lang={lang} onOpen={() => setDrawerOpen(true)} />}
@@ -157,10 +132,7 @@ export function FeedPage() {
               lang={lang}
               isMine={m.isMine}
               busy={deleteMood.isPending}
-              onEdit={() => {
-                setEditing(m);
-                setComposerOpen(true);
-              }}
+              onEdit={() => setEditing(m)}
               onDelete={() => deleteMood.mutate(m.id, { onSuccess: () => toast(t('toastDeleted', lang)) })}
             />
           ))}
@@ -175,38 +147,9 @@ export function FeedPage() {
         </div>
       )}
 
-      <button
-        className={'mm-fab' + (mobile ? ' mm-fab--mobile' : '')}
-        onClick={() => {
-          setEditing(null);
-          setComposerOpen(true);
-        }}
-        aria-label={t('fab', lang)}
-      >
-        <span className="mm-fab__plus">+</span>
-        {!mobile && t('fab', lang)}
-      </button>
-
       <FilterDrawer lang={lang} open={mobile && drawerOpen} onClose={() => setDrawerOpen(false)} />
 
-      <Composer
-        open={composerOpen}
-        lang={lang}
-        initial={editing ? { moodType: editing.moodType, text: editing.text } : null}
-        busy={createMood.isPending || updateMood.isPending}
-        error={
-          createMood.isError
-            ? apiErrorMessage(createMood.error, t('errorGeneric', lang))
-            : updateMood.isError
-              ? apiErrorMessage(updateMood.error, t('errorGeneric', lang))
-              : null
-        }
-        onSubmit={submitComposer}
-        onClose={() => {
-          setComposerOpen(false);
-          setEditing(null);
-        }}
-      />
+      <MoodDock lang={lang} editing={editing} onCancelEdit={() => setEditing(null)} />
     </div>
   );
 }

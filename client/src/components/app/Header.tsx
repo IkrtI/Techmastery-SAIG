@@ -2,6 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { SegmentedControl } from '@/components/core/SegmentedControl';
 import { useAuthStore } from '@/stores/authStore';
 import { useLangStore, t, type Lang } from '@/lib/i18n';
+import { useThemeStore, type Theme } from '@/stores/themeStore';
 import { logout } from '@/lib/api';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
@@ -27,6 +28,20 @@ function Brand() {
   );
 }
 
+function ThemeToggle({ lang }: { lang: Lang }) {
+  const { theme, setTheme } = useThemeStore();
+  return (
+    <SegmentedControl
+      options={[
+        { value: 'dark', label: t('themeDark', lang) },
+        { value: 'light', label: t('themeLight', lang) },
+      ]}
+      value={theme}
+      onChange={(v) => setTheme(v as Theme)}
+    />
+  );
+}
+
 export function Header() {
   const { lang, setLang } = useLangStore();
   const navigate = useNavigate();
@@ -48,6 +63,7 @@ export function Header() {
             ))}
           </nav>
           <div className="mm-header__right">
+          <ThemeToggle lang={lang} />
             <SegmentedControl
               options={[
                 { value: 'th', label: 'ไทย' },
@@ -64,6 +80,7 @@ export function Header() {
       )}
       {mobile && (
         <div className="mm-header__right">
+          <ThemeToggle lang={lang} />
           <SegmentedControl
             options={[
               { value: 'th', label: 'ไทย' },

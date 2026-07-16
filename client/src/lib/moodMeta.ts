@@ -18,8 +18,8 @@ export const moodMeta: Record<MoodType, { th: string; en: string }> = {
 };
 
 /** CSS custom-property helpers for a mood's accent/soft/glow colors. */
-export function moodVars(m: MoodType): { '--_accent': string; '--_soft': string } {
-  return { '--_accent': `var(--mood-${m})`, '--_soft': `var(--mood-${m}-soft)` };
+export function moodVars(m: MoodType): { '--_accent': string; '--_soft': string; '--_ink': string } {
+  return { '--_accent': `var(--mood-${m})`, '--_soft': `var(--mood-${m}-soft)`, '--_ink': `var(--mood-${m}-ink)` };
 }
 
 export function moodGlow(m: MoodType): string {

@@ -14,6 +14,8 @@ const STRINGS = {
   myMoods: { th: 'โพสต์ของฉัน', en: 'My posts' },
   admin: { th: 'ผู้ดูแลระบบ', en: 'Admin' },
   logout: { th: 'ออกจากระบบ', en: 'Log out' },
+  themeDark: { th: 'มืด', en: 'Dark' },
+  themeLight: { th: 'สว่าง', en: 'Light' },
   feedTitle: { th: 'ฟีดความรู้สึก', en: 'Mood feed' },
   statsCaption: { th: 'เหตุการณ์ที่ตรงกับตัวกรอง', en: 'posts matching filters' },
   filters: { th: 'ตัวกรอง', en: 'Filters' },

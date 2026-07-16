@@ -27,13 +27,13 @@ a:hover {
 }
 
 ::selection {
-  background: rgba(244, 63, 94, 0.35);
+  background: var(--selection);
 }
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e2630;
+  background: var(--scrollbar-thumb);
   border-radius: 999px;
 }
