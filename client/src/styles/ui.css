@@ -193,8 +193,8 @@
 .mm-moodcard__engage{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .mm-react{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;min-height:32px;border-radius:var(--radius-full);
   border:1px solid var(--border-strong);background:var(--surface-inset);color:var(--text-muted);font-family:var(--font-sans);
-  font-size:12px;font-weight:600;cursor:pointer;touch-action:manipulation;transition:all var(--dur-fast) ease}
-.mm-react:hover{color:var(--text-body);border-color:var(--text-subtle);background:var(--surface-muted)}
+  font-size:12px;font-weight:600;cursor:pointer;touch-action:manipulation;box-shadow:var(--shadow-chip);transition:all var(--dur-fast) ease}
+.mm-react:hover{color:var(--text-body);border-color:var(--text-subtle);background:var(--surface-muted);box-shadow:0 2px 6px rgba(0,0,0,0.18)}
 .mm-react:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 .mm-react.is-active{border-color:var(--_rc);color:var(--text-body);background:color-mix(in srgb, var(--_rc) 14%, transparent)}
 .mm-react__emoji{font-size:16px;line-height:1;flex:none}

@@ -75,6 +75,7 @@
   --shadow-fab: 0 8px 28px rgba(244, 63, 94, 0.35);
   --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.55);
   --shadow-toast: 0 10px 30px rgba(0, 0, 0, 0.4);
+  --shadow-chip: 0 1px 3px rgba(0, 0, 0, 0.35);
   --dur-fast: 150ms;
   --dur-card: 380ms;
   --dur-sheet: 260ms;
@@ -132,4 +133,5 @@
   --shadow-fab: 0 6px 20px rgba(28, 28, 28, 0.25);
   --shadow-modal: 0 24px 64px rgba(28, 28, 28, 0.18);
   --shadow-toast: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-chip: 0 1px 3px rgba(28, 28, 28, 0.12);
 }
