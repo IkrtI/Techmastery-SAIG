@@ -90,6 +90,18 @@ const STRINGS = {
   reactHeart: { th: 'ส่งใจให้', en: 'Send love' },
   reactHug: { th: 'กอดๆ นะ', en: 'Hug' },
   reactHaha: { th: 'ฮาด้วย', en: 'Haha' },
+  selfHarmTitle: { th: 'คุณโอเคไหมนะ?', en: 'Are you okay?' },
+  selfHarmBody: {
+    th: 'ขอบคุณที่กล้าพูดความรู้สึกออกมานะ คุณไม่ได้อยู่คนเดียว ข้อความแบบนี้ส่งลงฟีดไม่ได้ แต่มีคนที่พร้อมรับฟังคุณจริงๆ อยู่ตรงนี้',
+    en: 'Thank you for opening up — you are not alone. This message cannot be posted here, but real people are ready to listen right now.',
+  },
+  selfHarmSos: { th: 'คุยกับ KMITL SOS', en: 'Talk to KMITL SOS' },
+  selfHarmHotline: { th: 'โทร 1323 สายด่วนสุขภาพจิต (ฟรี 24 ชม.)', en: 'Call 1323 mental health hotline (free, 24/7)' },
+  selfHarmClose: { th: 'เข้าใจแล้ว', en: 'Got it' },
+  selfHarmError: {
+    th: 'ข้อความนี้ส่งไม่ได้ — ถ้ารู้สึกแย่มากๆ โทร 1323 หรือเข้า sos.kmitl.ac.th ได้เลย',
+    en: 'This message cannot be sent — if you are struggling, call 1323 or visit sos.kmitl.ac.th',
+  },
   comments: { th: 'ความคิดเห็น', en: 'Comments' },
   commentPh: { th: 'ส่งกำลังใจให้หน่อย… (ไม่ระบุตัวตน)', en: 'Send some encouragement… (anonymous)' },
   send: { th: 'ส่ง', en: 'Send' },

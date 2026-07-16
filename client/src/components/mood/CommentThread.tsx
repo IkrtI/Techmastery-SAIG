@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAddComment, useComments, useDeleteComment } from '@/hooks/queries';
-import { containsHarm, containsProfanity } from '@/lib/profanity';
+import { containsHarm, containsProfanity, containsSelfHarm } from '@/lib/profanity';
+import { SupportDialog } from '@/components/app/SupportDialog';
 import { t, relTime, type Lang } from '@/lib/i18n';
 import { useToastStore } from '@/stores/toastStore';
 import { apiErrorMessage } from '@/lib/api';
@@ -18,9 +19,21 @@ export function CommentThread({ postId, lang }: { postId: string; lang: Lang }) 
   const deleteComment = useDeleteComment(postId);
   const toast = useToastStore((s) => s.show);
   const [text, setText] = useState('');
+  const [supportOpen, setSupportOpen] = useState(false);
+  const warnedRef = useRef(false);
 
   const profane = text.trim().length > 0 && (containsProfanity(text) || containsHarm(text));
-  const valid = text.trim().length > 0 && text.length <= 200 && !profane;
+  const selfHarm = text.trim().length > 0 && containsSelfHarm(text);
+  const valid = text.trim().length > 0 && text.length <= 200 && !profane && !selfHarm;
+
+  // Open the support dialog once each time self-harm content appears.
+  useEffect(() => {
+    if (selfHarm && !warnedRef.current) {
+      warnedRef.current = true;
+      setSupportOpen(true);
+    }
+    if (!selfHarm) warnedRef.current = false;
+  }, [selfHarm]);
 
   const submit = () => {
     if (!valid || addComment.isPending) return;
@@ -83,11 +96,16 @@ export function CommentThread({ postId, lang }: { postId: string; lang: Lang }) 
           {t('send', lang)}
         </button>
       </div>
-      {(profane || addComment.isError) && (
+      {(profane || selfHarm || addComment.isError) && (
         <p className="mm-alert" role="alert">
-          {profane ? t('profanityError', lang) : apiErrorMessage(addComment.error, t('errorGeneric', lang))}
+          {selfHarm
+            ? t('selfHarmError', lang)
+            : profane
+              ? t('profanityError', lang)
+              : apiErrorMessage(addComment.error, t('errorGeneric', lang))}
         </p>
       )}
+      <SupportDialog open={supportOpen} lang={lang} onClose={() => setSupportOpen(false)} />
     </div>
   );
 }

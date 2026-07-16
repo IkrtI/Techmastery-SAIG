@@ -285,6 +285,9 @@
   font-size:18px;cursor:pointer}
 .mm-modal__close:hover{color:var(--text-body)}
 .mm-modal__footer{display:flex;justify-content:flex-end;gap:10px}
+.mm-support__body{margin:0;font-size:14px;line-height:1.7;color:var(--text-secondary)}
+.mm-support__actions{display:flex;flex-direction:column;gap:8px}
+.mm-support__actions .mm-btn{justify-content:center;text-decoration:none}
 
 /* --- Toast ---------------------------------------------------------------------------- */
 .mm-toast{position:fixed;left:50%;top:calc(var(--header-height) + 14px);transform:translateX(-50%);z-index:90;display:flex;align-items:center;gap:8px;

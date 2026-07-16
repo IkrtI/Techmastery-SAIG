@@ -175,7 +175,10 @@ Base `/api`. All responses JSON. Errors: `{error: {code, message, details?}}`.
 | PUT `/moods/:id/reaction` | `{type}` | `{reactions, myReaction}` — upsert, one per user |
 | DELETE `/moods/:id/reaction` | — | `{reactions, myReaction: null}` |
 
-**Profanity screen** (`lib/profanity.ts`, server authoritative, client mirrors): two tiers — vulgar Thai/English words (blocked in posts **and** comments; repeat-collapse, de-leet, Thai lookahead guards e.g. หี/หีบ, สัด/สัดส่วน, ห่า/ห่าง) and a hostile tier (ไปตาย, ตายซะ, kys, "kill yourself", …) blocked in **comments only** — self-venting posts like "อยากตาย" stay allowed.
+**Moderation screen** (`lib/profanity.ts`, server authoritative, client mirrors): three tiers —
+1. **Profanity** (vulgar Thai/English; repeat-collapse, de-leet, Thai lookahead guards e.g. หี/หีบ, สัด/สัดส่วน, ห่า/ห่าง) — blocked in posts, comments, and the onboarding/profile `major` field.
+2. **Hostility** (ไปตาย, ตายซะ, kys, "kill yourself", …) — blocked in **comments only**.
+3. **Self-harm** (อยากตาย, ฆ่าตัวตาย, กรีดข้อมือ, "want to die", kms, …) — blocked in posts **and** comments; the 400 message and a client SupportDialog point to KMITL SOS (https://sos.kmitl.ac.th) and the 1323 mental-health hotline (free, 24h). The dialog opens once per occurrence while typing; submit is disabled.
 
 **CommentPublic**: `{id, text, faculty{slug,nameTh,nameEn}, year, createdAt, isMine}` — anonymity invariant applies.
 **MoodPublic** additionally carries `{commentCount, reactions: {encourage,relate,congrats}, myReaction}` (batched aggregation per feed page). Deleting a mood cascades its comments and reactions.

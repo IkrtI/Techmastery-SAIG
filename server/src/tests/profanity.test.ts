@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { containsProfanity } from '../lib/profanity.js';
+import { containsHarm, containsProfanity, containsSelfHarm } from '../lib/profanity.js';
 
 describe('containsProfanity', () => {
   it('flags Thai profanity, incl. repeated-char obfuscation', () => {
@@ -23,5 +23,25 @@ describe('containsProfanity', () => {
     expect(containsProfanity('my class assignment is done')).toBe(false); // ass inside words
     expect(containsProfanity('the assistant helped a lot')).toBe(false);
     expect(containsProfanity('สอบ Circuit Analysis ยากมาก')).toBe(false);
+  });
+});
+
+describe('containsSelfHarm / containsHarm', () => {
+  it('flags self-harm expressions (TH + EN)', () => {
+    expect(containsSelfHarm('อยากตาย')).toBe(true);
+    expect(containsSelfHarm('ไม่อยากอยู่แล้ว')).toBe(true);
+    expect(containsSelfHarm('i want to die')).toBe(true);
+    expect(containsSelfHarm('kms')).toBe(true);
+  });
+
+  it('flags hostile phrases', () => {
+    expect(containsHarm('ไปตาย')).toBe(true);
+    expect(containsHarm('kys')).toBe(true);
+  });
+
+  it('does not flag ordinary sadness or empathy', () => {
+    expect(containsSelfHarm('เหนื่อยมาก ท้อสุดๆ')).toBe(false);
+    expect(containsSelfHarm('เศร้าจัง สอบตก')).toBe(false);
+    expect(containsHarm('สู้ๆ นะ เป็นกำลังใจให้')).toBe(false);
   });
 });

@@ -66,14 +66,22 @@ describe('comments', () => {
     await request(app).post(`/api/moods/${postId}/comments`).set('Authorization', auth).send({ text: '   ' }).expect(400);
   });
 
-  it('blocks hostile phrases in comments but allows self-venting posts', async () => {
+  it('blocks hostile phrases in comments and self-harm content everywhere', async () => {
     const { auth, postId } = await setup();
     await request(app).post(`/api/moods/${postId}/comments`).set('Authorization', auth).send({ text: 'ไปตาย' }).expect(400);
     await request(app).post(`/api/moods/${postId}/comments`).set('Authorization', auth).send({ text: 'ตายซะไป๊' }).expect(400);
     await request(app).post(`/api/moods/${postId}/comments`).set('Authorization', auth).send({ text: 'kys loser' }).expect(400);
     await request(app).post(`/api/moods/${postId}/comments`).set('Authorization', auth).send({ text: 'ไอ้ควายเอ๊ย' }).expect(400);
-    // venting about yourself in a post stays allowed
-    await request(app).post('/api/moods').set('Authorization', auth).send({ moodType: 'sad', text: 'เหนื่อยมาก อยากตาย' }).expect(201);
+    // self-harm tier blocks posts AND comments, pointing at support channels
+    const blocked = await request(app)
+      .post('/api/moods')
+      .set('Authorization', auth)
+      .send({ moodType: 'sad', text: 'เหนื่อยมาก อยากตาย' })
+      .expect(400);
+    expect(JSON.stringify(blocked.body)).toContain('1323');
+    await request(app).post(`/api/moods/${postId}/comments`).set('Authorization', auth).send({ text: 'ฉันอยากตาย' }).expect(400);
+    // ordinary venting still posts fine
+    await request(app).post('/api/moods').set('Authorization', auth).send({ moodType: 'sad', text: 'เหนื่อยมากวันนี้ ท้อสุดๆ' }).expect(201);
   });
 
   it('owner and admin can delete; stranger cannot', async () => {

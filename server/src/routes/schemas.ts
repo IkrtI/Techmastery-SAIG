@@ -4,7 +4,10 @@ import { isValidObjectId } from 'mongoose';
 import { z } from 'zod';
 import { MOOD_TYPES } from '../models/Mood.js';
 import { REACTION_TYPES } from '../models/Reaction.js';
-import { containsHarm, containsProfanity } from '../lib/profanity.js';
+import { containsHarm, containsProfanity, containsSelfHarm } from '../lib/profanity.js';
+
+const SELF_HARM_MESSAGE =
+  'ถ้ากำลังรู้สึกแย่มากๆ คุยกับ KMITL SOS ได้ที่ https://sos.kmitl.ac.th หรือโทรสายด่วนสุขภาพจิต 1323 ฟรีตลอด 24 ชั่วโมง';
 
 export const moodTypeSchema = z.enum(MOOD_TYPES);
 export const moodTextSchema = z
@@ -12,7 +15,8 @@ export const moodTextSchema = z
   .trim()
   .min(1)
   .max(280)
-  .refine((t) => !containsProfanity(t), { message: 'ข้อความมีคำไม่เหมาะสม' });
+  .refine((t) => !containsProfanity(t), { message: 'ข้อความมีคำไม่เหมาะสม' })
+  .refine((t) => !containsSelfHarm(t), { message: SELF_HARM_MESSAGE });
 
 export const idParamsSchema = z.object({ id: z.string().refine(isValidObjectId, 'Invalid id') });
 
@@ -22,7 +26,8 @@ export const commentBodySchema = z.object({
     .trim()
     .min(1)
     .max(200)
-    .refine((t) => !containsProfanity(t) && !containsHarm(t), { message: 'ข้อความมีคำไม่เหมาะสม' }),
+    .refine((t) => !containsProfanity(t) && !containsHarm(t), { message: 'ข้อความมีคำไม่เหมาะสม' })
+    .refine((t) => !containsSelfHarm(t), { message: SELF_HARM_MESSAGE }),
 });
 
 export const reactionBodySchema = z.object({
@@ -31,7 +36,7 @@ export const reactionBodySchema = z.object({
 
 export const onboardingBodySchema = z.object({
   facultyId: z.string().refine(isValidObjectId, 'Invalid faculty id'),
-  major: z.string().trim().min(1).max(100),
+  major: z.string().trim().min(1).max(100).refine((t) => !containsProfanity(t), { message: 'ข้อความมีคำไม่เหมาะสม' }),
   year: z.coerce.number().int().min(1).max(8),
 });
 

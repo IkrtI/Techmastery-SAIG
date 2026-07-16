@@ -1,7 +1,7 @@
 // FE copies of the composer + onboarding validation shapes (SPECS §6).
 import { z } from 'zod';
 import { MOOD_TYPES } from './moodMeta';
-import { containsProfanity } from './profanity';
+import { containsProfanity, containsSelfHarm } from './profanity';
 
 export const composerSchema = z.object({
   moodType: z.enum(MOOD_TYPES),
@@ -10,7 +10,8 @@ export const composerSchema = z.object({
     .trim()
     .min(1)
     .max(280)
-    .refine((t) => !containsProfanity(t)),
+    .refine((t) => !containsProfanity(t))
+    .refine((t) => !containsSelfHarm(t)),
 });
 
 export const onboardingSchema = z.object({

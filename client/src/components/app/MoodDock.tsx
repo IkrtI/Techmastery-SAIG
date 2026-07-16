@@ -3,7 +3,8 @@ import { Button } from '@/components/core/Button';
 import { MoodChip } from '@/components/mood/MoodChip';
 import { moodOrder, type MoodType } from '@/lib/moodMeta';
 import { composerSchema } from '@/lib/schemas';
-import { containsProfanity } from '@/lib/profanity';
+import { containsProfanity, containsSelfHarm } from '@/lib/profanity';
+import { SupportDialog } from '@/components/app/SupportDialog';
 import { t, type Lang } from '@/lib/i18n';
 import { useCreateMood, useUpdateMood } from '@/hooks/queries';
 import { useToastStore } from '@/stores/toastStore';
@@ -24,6 +25,8 @@ interface MoodDockProps {
 export function MoodDock({ lang, editing, onCancelEdit }: MoodDockProps) {
   const [mood, setMood] = useState<MoodType | null>(null);
   const [text, setText] = useState('');
+  const [supportOpen, setSupportOpen] = useState(false);
+  const warnedRef = useRef(false);
   const taRef = useRef<HTMLTextAreaElement | null>(null);
   const toast = useToastStore((s) => s.show);
   const createMood = useCreateMood();
@@ -50,8 +53,20 @@ export function MoodDock({ lang, editing, onCancelEdit }: MoodDockProps) {
 
   const busy = createMood.isPending || updateMood.isPending;
   const profane = text.trim().length > 0 && containsProfanity(text);
+  const selfHarm = text.trim().length > 0 && containsSelfHarm(text);
+
+  // Open the support dialog once each time self-harm content appears.
+  useEffect(() => {
+    if (selfHarm && !warnedRef.current) {
+      warnedRef.current = true;
+      setSupportOpen(true);
+    }
+    if (!selfHarm) warnedRef.current = false;
+  }, [selfHarm]);
   const valid = mood != null && composerSchema.safeParse({ moodType: mood, text }).success;
-  const error = profane
+  const error = selfHarm
+    ? t('selfHarmError', lang)
+    : profane
     ? t('profanityError', lang)
     : createMood.isError
     ? apiErrorMessage(createMood.error, t('errorGeneric', lang))
@@ -124,6 +139,7 @@ export function MoodDock({ lang, editing, onCancelEdit }: MoodDockProps) {
           {error}
         </p>
       )}
+      <SupportDialog open={supportOpen} lang={lang} onClose={() => setSupportOpen(false)} />
     </div>
   );
 }
