@@ -48,9 +48,12 @@ export async function clearDb(): Promise<void> {
   await Promise.all(collections.map((c) => c.deleteMany({})));
 }
 
-export async function createFaculty(overrides: Partial<{ slug: string; nameTh: string; nameEn: string; knownMajors: string[] }> = {}): Promise<FacultyDoc> {
+export async function createFaculty(
+  overrides: Partial<{ slug: string; code: string; nameTh: string; nameEn: string; knownMajors: string[] }> = {},
+): Promise<FacultyDoc> {
   return Faculty.create({
     slug: overrides.slug ?? 'engineering',
+    code: overrides.code,
     nameTh: overrides.nameTh ?? 'คณะวิศวกรรมศาสตร์',
     nameEn: overrides.nameEn ?? 'Faculty of Engineering',
     knownMajors: overrides.knownMajors ?? [],

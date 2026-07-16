@@ -60,7 +60,7 @@ const userPublic = z
     id: z.string(),
     email: z.string().email(),
     studentId: z.string(),
-    faculty: facultyPublic.extend({ id: z.string(), knownMajors: z.array(z.string()) }).nullable(),
+    faculty: facultyPublic.extend({ id: z.string(), knownMajors: z.array(z.string()), code: z.string().nullable() }).nullable(),
     major: z.string().nullable(),
     year: z.number().int().nullable(),
     role: z.enum(['user', 'admin']),
@@ -341,7 +341,7 @@ registry.registerPath({
       description: 'Faculties',
       content: {
         'application/json': {
-          schema: z.array(facultyPublic.extend({ id: z.string(), knownMajors: z.array(z.string()) })),
+          schema: z.array(facultyPublic.extend({ id: z.string(), knownMajors: z.array(z.string()), code: z.string().nullable() })),
         },
       },
     },

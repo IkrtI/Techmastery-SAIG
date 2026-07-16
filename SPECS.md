@@ -78,6 +78,7 @@ Indexes: `{createdAt:-1, _id:-1}`, `{faculty:1, createdAt:-1, _id:-1}`, `{majorN
 | nameTh / nameEn | string |
 | slug | string, unique |
 | knownMajors | string[] — seed-managed canonical suggestions; onboarding never mutates this list |
+| code | official KMITL faculty code (digits 3-4 of student IDs); seeded from the reg.kmitl curriculum catalog incl. pseudo-entries `95` exchange, `99` staff |
 
 ### Comment
 | field | type | rules |
@@ -108,7 +109,7 @@ Indexes: `{createdAt:-1, _id:-1}`, `{faculty:1, createdAt:-1, _id:-1}`, `{majorN
 ### Flow
 1. `GET /api/auth/login` → set `state` + PKCE verifier + OIDC `nonce` in short-lived (5 min) httpOnly cookies → 302 to Keycloak authorize (`response_type=code`, `scope=openid profile email`, `nonce`).
 2. `GET /api/auth/callback?code&state` → verify state → token exchange (code + client_secret + PKCE) → verify `id_token` signature, issuer, audience, expiry, and nonce via issuer JWKS (`jose`) → extract `email`, `name`.
-3. Upsert User by email, assigning `role=admin` when the verified email is in `SEED_ADMIN_EMAILS`. Issue the refresh cookie only, then 302 → `APP_URL` (`/onboarding` if `!onboarded`, else `/`).
+3. Upsert User by email, assigning `role=admin` when the verified email is in `SEED_ADMIN_EMAILS`. Staff accounts — email local part not numeric — are auto-onboarded to the `staff` pseudo-faculty (major เจ้าหน้าที่, year 1, role stays `user`) and never see /onboarding. Issue the refresh cookie only, then 302 → `APP_URL` (`/onboarding` if `!onboarded`, else `/`).
 4. FE calls `POST /api/auth/refresh` on load to bootstrap `{accessToken, user}`. `GET /api/auth/me` is an authenticated user re-fetch, never the bootstrap path.
 
 The verified claims prove control of a KMITL account, not faculty/year membership. Accept only lowercase-normalized `@kmitl.ac.th` emails. Derive `studentId` from the verified email local part; do not claim a stricter student-only guarantee until the real SSO client eligibility policy or student email format is confirmed during Phase 2 verification.
@@ -150,7 +151,7 @@ Base `/api`. All responses JSON. Errors: `{error: {code, message, details?}}`.
 | POST `/auth/refresh` | refresh cookie | — | `{accessToken, user}` |
 | POST `/auth/logout` | refresh cookie | — | 204 |
 | GET `/auth/me` | Bearer | — | `{user}` (id, email, studentId, faculty{...}, major, year, role, onboarded) |
-| PATCH `/auth/onboarding` | Bearer | `{facultyId, major, year}` | `{user}` — normalizes major and sets `onboarded=true`; does not mutate faculty suggestions |
+| PATCH `/auth/onboarding` | Bearer | `{facultyId, major, year}` | `{user}` — **faculty is identity-locked**: 8-digit student IDs pin to the faculty whose `code` = digits 3-4 (68010025 → `01` Engineering), staff pin to `staff`; the submitted `facultyId` only decides otherwise-unknown IDs. Normalizes major, sets `onboarded=true` |
 
 ### Moods
 | method path | auth | in | out |

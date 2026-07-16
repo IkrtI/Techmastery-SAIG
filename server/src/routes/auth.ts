@@ -15,6 +15,7 @@ import {
   signAccessToken,
 } from '../services/tokens.js';
 import { normalizeMajorDisplay, normalizeMajorKey, toUserPublic } from '../lib/serialize.js';
+import { facultyCodeFromStudentId, isStaffId, STAFF_FACULTY_SLUG, STAFF_MAJOR } from '../lib/facultyCode.js';
 import { onboardingBodySchema } from './schemas.js';
 
 const REFRESH_COOKIE = 'refresh_token';
@@ -88,6 +89,20 @@ authRouter.get('/callback', async (req, res) => {
       },
       { upsert: true, new: true },
     );
+    // Staff accounts (non-numeric SSO local part) skip onboarding entirely.
+    if (!user.onboarded && isStaffId(user.studentId)) {
+      const staffFaculty = await Faculty.findOne({ slug: STAFF_FACULTY_SLUG });
+      if (staffFaculty) {
+        user.set({
+          faculty: staffFaculty._id,
+          major: STAFF_MAJOR,
+          majorNormalized: normalizeMajorKey(STAFF_MAJOR),
+          year: 1,
+          onboarded: true,
+        });
+        await user.save();
+      }
+    }
     setRefreshCookie(res, await issueRefreshToken(user._id));
     res.redirect(`${env().APP_URL}${user.onboarded ? '/' : '/onboarding'}`);
   } catch (err) {
@@ -166,7 +181,17 @@ authRouter.patch(
   async (req: AuthedRequest, res, next) => {
     try {
       const { facultyId, major, year } = req.body as z.infer<typeof onboardingBodySchema>;
-      const faculty = await Faculty.findById(facultyId);
+      const me = await User.findById(req.user!.sub);
+      if (!me) throw new ApiError('UNAUTHENTICATED', 'Unknown user');
+      // Faculty is locked by identity where derivable: staff accounts pin to
+      // the staff entry, 8-digit student IDs pin to their embedded code
+      // (digits 3-4). The submitted facultyId only decides otherwise-unknown IDs.
+      let faculty = isStaffId(me.studentId) ? await Faculty.findOne({ slug: STAFF_FACULTY_SLUG }) : null;
+      if (!faculty) {
+        const code = facultyCodeFromStudentId(me.studentId);
+        if (code) faculty = await Faculty.findOne({ code });
+      }
+      if (!faculty) faculty = await Faculty.findById(facultyId);
       if (!faculty) throw new ApiError('NOT_FOUND', 'Faculty not found');
       const display = normalizeMajorDisplay(major);
       if (!display) throw new ApiError('VALIDATION_ERROR', 'Invalid major');

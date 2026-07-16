@@ -7,6 +7,7 @@ import { REACTION_TYPES, type MoodPublic, type ReactionType } from '@/lib/types'
 
 export function badgeText(m: MoodPublic, lang: Lang): string {
   const fac = m.faculty ? (lang === 'en' ? m.faculty.nameEn : m.faculty.nameTh) : '—';
+  if (m.faculty?.slug === 'staff') return fac;
   return `${fac} · ${lang === 'en' ? 'Y' : 'ปี '}${m.year}`;
 }
 

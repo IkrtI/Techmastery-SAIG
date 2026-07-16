@@ -13,3 +13,9 @@ export function yearFromStudentId(studentId: string | null | undefined, now: Dat
   const year = academicBE - entryBE + 1;
   return year >= 1 && year <= 8 ? year : null;
 }
+
+/** Digits 3-4 of an 8-digit KMITL student ID are the faculty code (68010025 → "01"). */
+export function facultyCodeFromStudentId(studentId: string | null | undefined): string | null {
+  if (!studentId || !/^\d{8}$/.test(studentId)) return null;
+  return studentId.slice(2, 4);
+}

@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Select } from '@/components/core/Select';
 import { Input } from '@/components/core/Input';
 import { useFaculties } from '@/hooks/queries';
 import { onboardingSchema } from '@/lib/schemas';
-import { yearFromStudentId } from '@/lib/studentYear';
+import { facultyCodeFromStudentId, yearFromStudentId } from '@/lib/studentYear';
 import { t, type Lang } from '@/lib/i18n';
 
 export interface ProfileFormState {
+  studentId: string | null;
   facultyId: string;
   setFacultyId: (v: string) => void;
   major: string;
@@ -25,6 +26,7 @@ export function useProfileForm(initial: { facultyId?: string; major?: string; ye
   const [year, setYear] = useState<number | null>(initial.year ?? auto);
   const [touchedYear, setTouchedYear] = useState(false);
   return {
+    studentId: initial.studentId ?? null,
     facultyId,
     setFacultyId,
     major,
@@ -42,6 +44,13 @@ export function useProfileForm(initial: { facultyId?: string; major?: string; ye
 /** Faculty select + major input with suggestion chips + year chips. */
 export function ProfileFormFields({ form, lang }: { form: ProfileFormState; lang: Lang }) {
   const { data: faculties } = useFaculties();
+  // Student IDs embed the faculty (digits 3-4) — lock the select when it maps.
+  const lockCode = facultyCodeFromStudentId(form.studentId);
+  const locked = lockCode ? faculties?.find((f) => f.code === lockCode) : undefined;
+  const { facultyId, setFacultyId } = form;
+  useEffect(() => {
+    if (locked && facultyId !== locked.id) setFacultyId(locked.id);
+  }, [locked, facultyId, setFacultyId]);
   const faculty = faculties?.find((f) => f.id === form.facultyId);
   const query = form.major.trim().toLocaleLowerCase('en-US');
   const suggestions = (faculty?.knownMajors ?? []).filter((m) => !query || m.toLocaleLowerCase('en-US').includes(query)).slice(0, 6);
@@ -51,6 +60,7 @@ export function ProfileFormFields({ form, lang }: { form: ProfileFormState; lang
         <label className="mm-label">{t('faculty', lang)}</label>
         <Select
           value={form.facultyId}
+          disabled={!!locked}
           onChange={(e) => {
             form.setFacultyId(e.target.value);
             form.setMajor('');
@@ -60,6 +70,7 @@ export function ProfileFormFields({ form, lang }: { form: ProfileFormState; lang
             ...(faculties ?? []).map((f) => ({ value: f.id, label: lang === 'en' ? f.nameEn : f.nameTh })),
           ]}
         />
+        {locked && <span className="mm-label--xs mm-label">{t('facultyAutoHint', lang)}</span>}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

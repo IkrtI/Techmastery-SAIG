@@ -6,6 +6,7 @@ export interface FacultyPublic {
   nameTh: string;
   nameEn: string;
   knownMajors: string[];
+  code?: string | null;
 }
 
 export interface UserPublic {

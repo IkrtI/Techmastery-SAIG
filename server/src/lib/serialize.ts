@@ -87,7 +87,7 @@ export interface UserPublic {
   id: string;
   email: string;
   studentId: string;
-  faculty: (FacultyPublic & { id: string; knownMajors: string[] }) | null;
+  faculty: (FacultyPublic & { id: string; knownMajors: string[]; code: string | null }) | null;
   major: string | null;
   year: number | null;
   role: string;
@@ -101,7 +101,7 @@ export function toUserPublic(user: UserDoc & { faculty?: FacultyDoc | Types.Obje
     email: user.email,
     studentId: user.studentId,
     faculty: fac
-      ? { id: fac._id.toString(), slug: fac.slug, nameTh: fac.nameTh, nameEn: fac.nameEn, knownMajors: fac.knownMajors ?? [] }
+      ? { id: fac._id.toString(), slug: fac.slug, nameTh: fac.nameTh, nameEn: fac.nameEn, knownMajors: fac.knownMajors ?? [], code: fac.code ?? null }
       : null,
     major: user.major ?? null,
     year: user.year ?? null,

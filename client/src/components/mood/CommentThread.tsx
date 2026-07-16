@@ -9,6 +9,7 @@ import type { CommentPublic } from '@/lib/types';
 
 function commentBadge(c: CommentPublic, lang: Lang): string {
   const fac = c.faculty ? (lang === 'en' ? c.faculty.nameEn : c.faculty.nameTh) : '—';
+  if (c.faculty?.slug === 'staff') return `${fac} · ${relTime(c.createdAt, lang)}`;
   return `${fac} · ${lang === 'en' ? 'Y' : 'ปี '}${c.year} · ${relTime(c.createdAt, lang)}`;
 }
 

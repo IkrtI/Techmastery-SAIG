@@ -15,6 +15,7 @@ metaRouter.get('/faculties', requireAuth, async (_req, res, next) => {
       faculties.map((f) => ({
         id: f._id.toString(),
         slug: f.slug,
+        code: f.code ?? null,
         nameTh: f.nameTh,
         nameEn: f.nameEn,
         knownMajors: f.knownMajors ?? [],
