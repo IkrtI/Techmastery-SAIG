@@ -12,6 +12,13 @@
 @keyframes rgLoadBar{0%{transform:translateX(-120%)}100%{transform:translateX(320%)}}
 @keyframes rgSpin{to{transform:rotate(360deg)}}
 
+/* --- Touch & focus baseline (UX pass) ------------------------------------------------ */
+.mm-btn,.mm-chip,.mm-seg__opt,.mm-nav__item,.mm-bottomnav__item,.mm-moodcard__kebab,.mm-logout,
+.mm-modal__close,.mm-dock__cancel,.mm-fab,.mm-brand{touch-action:manipulation}
+.mm-moodcard__kebab:focus-visible,.mm-logout:focus-visible,.mm-modal__close:focus-visible,
+.mm-dock__cancel:focus-visible,.mm-nav__item:focus-visible,.mm-bottomnav__item:focus-visible,
+.mm-brand:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+
 /* --- Buttons -------------------------------------------------- */
 .mm-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:var(--radius-md);
   border:none;font-family:var(--font-sans);font-size:14px;font-weight:600;line-height:1;cursor:pointer;white-space:nowrap;
@@ -155,7 +162,7 @@
 .mm-moodcard__mood{font-size:14px;font-weight:600;color:var(--_ink)}
 .mm-moodcard__badge{font-size:11.5px;color:var(--text-muted)}
 .mm-moodcard__time{margin-left:auto;font-size:11.5px;color:var(--text-subtle);font-family:var(--font-mono);white-space:nowrap}
-.mm-moodcard__kebab{width:28px;height:28px;border-radius:var(--radius-sm);border:none;background:transparent;color:var(--text-muted);
+.mm-moodcard__kebab{width:36px;height:36px;border-radius:var(--radius-sm);border:none;background:transparent;color:var(--text-muted);
   font-size:17px;line-height:1;cursor:pointer;flex:none;transition:all var(--dur-fast) ease}
 .mm-moodcard__kebab:hover{background:var(--surface-muted);color:var(--text-body)}
 .mm-moodcard__text{margin:0;font-size:14.5px;line-height:1.55;color:var(--text-body);text-wrap:pretty;white-space:pre-wrap;overflow-wrap:anywhere}
@@ -265,4 +272,15 @@
   .mm-glowlayer{transition:none}
   .mm-stats__seg{transition:none}
   .mm-chip--picker.is-active{transform:none}
+}
+
+/* --- Mobile UX pass -------------------------------------------------------------------- */
+@media (max-width:767px){
+  .mm-input,.mm-select > select,.mm-ta__field,.mm-dock__input{font-size:16px}
+  .mm-chip--picker{min-height:40px}
+  .mm-chip{min-height:34px}
+  .mm-seg__opt{padding:7px 11px}
+  .mm-header{padding:0 12px;gap:8px}
+  .mm-header__right{gap:8px}
+  .mm-brand__name--sm b{display:none}
 }
