@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { BrowserRouter, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Header, BottomNav } from '@/components/app/Header';
@@ -11,6 +11,7 @@ import { FeedPage } from '@/pages/FeedPage';
 import { MyMoodsPage } from '@/pages/MyMoodsPage';
 import { AdminPage } from '@/pages/AdminPage';
 import { bootstrapSession } from '@/lib/api';
+import { initMatomo, trackPageView } from '@/lib/matomo';
 import { useFilterStore } from '@/stores/filterStore';
 import { useStats } from '@/hooks/queries';
 import { useAuthStore } from '@/stores/authStore';
@@ -19,6 +20,20 @@ import { useIsMobile } from '@/hooks/useIsMobile';
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
 });
+
+/** Reports SPA navigations to Matomo (initial load is tracked by initMatomo). */
+function MatomoTracker() {
+  const location = useLocation();
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    trackPageView(location.pathname + location.search);
+  }, [location.pathname, location.search]);
+  return null;
+}
 
 /** Authed shell: glow background on the feed, sticky header, mobile bottom nav, toast host. */
 function AppShell() {
@@ -43,12 +58,16 @@ function AppShell() {
 export default function App() {
   const status = useAuthStore((s) => s.status);
   useEffect(() => {
+    initMatomo();
+  }, []);
+  useEffect(() => {
     if (status === 'loading') void bootstrapSession();
   }, [status]);
 
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <MatomoTracker />
         <Routes>
           <Route element={<GuestOnly />}>
             <Route path="/login" element={<LoginPage />} />

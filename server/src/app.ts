@@ -16,7 +16,18 @@ import { buildOpenApiDocument } from './docs/openapi.js';
 export function createApp(): Express {
   const app = express();
   app.set('trust proxy', 1); // Cloudflare + Traefik
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          // Matomo (insight.kmitl.ac.th): tracker script + beacon/XHR + pixel.
+          'script-src': ["'self'", 'https://insight.kmitl.ac.th'],
+          'connect-src': ["'self'", 'https://insight.kmitl.ac.th'],
+          'img-src': ["'self'", 'data:', 'https://insight.kmitl.ac.th'],
+        },
+      },
+    }),
+  );
   if (env().NODE_ENV !== 'production') {
     // Prod is same-origin (Express serves the built client) — no CORS needed.
     app.use(cors({ origin: env().APP_URL, credentials: true }));
