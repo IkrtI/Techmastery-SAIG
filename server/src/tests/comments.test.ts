@@ -66,6 +66,16 @@ describe('comments', () => {
     await request(app).post(`/api/moods/${postId}/comments`).set('Authorization', auth).send({ text: '   ' }).expect(400);
   });
 
+  it('blocks hostile phrases in comments but allows self-venting posts', async () => {
+    const { auth, postId } = await setup();
+    await request(app).post(`/api/moods/${postId}/comments`).set('Authorization', auth).send({ text: 'ไปตาย' }).expect(400);
+    await request(app).post(`/api/moods/${postId}/comments`).set('Authorization', auth).send({ text: 'ตายซะไป๊' }).expect(400);
+    await request(app).post(`/api/moods/${postId}/comments`).set('Authorization', auth).send({ text: 'kys loser' }).expect(400);
+    await request(app).post(`/api/moods/${postId}/comments`).set('Authorization', auth).send({ text: 'ไอ้ควายเอ๊ย' }).expect(400);
+    // venting about yourself in a post stays allowed
+    await request(app).post('/api/moods').set('Authorization', auth).send({ moodType: 'sad', text: 'เหนื่อยมาก อยากตาย' }).expect(201);
+  });
+
   it('owner and admin can delete; stranger cannot', async () => {
     const { auth, otherAuth, postId, faculty } = await setup();
     const c = await request(app).post(`/api/moods/${postId}/comments`).set('Authorization', otherAuth).send({ text: 'เป็นกำลังใจให้' }).expect(201);

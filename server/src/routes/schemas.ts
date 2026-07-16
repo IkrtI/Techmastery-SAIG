@@ -3,7 +3,7 @@
 import { isValidObjectId } from 'mongoose';
 import { z } from 'zod';
 import { MOOD_TYPES } from '../models/Mood.js';
-import { containsProfanity } from '../lib/profanity.js';
+import { containsHarm, containsProfanity } from '../lib/profanity.js';
 
 export const moodTypeSchema = z.enum(MOOD_TYPES);
 export const moodTextSchema = z
@@ -21,7 +21,7 @@ export const commentBodySchema = z.object({
     .trim()
     .min(1)
     .max(200)
-    .refine((t) => !containsProfanity(t), { message: 'ข้อความมีคำไม่เหมาะสม' }),
+    .refine((t) => !containsProfanity(t) && !containsHarm(t), { message: 'ข้อความมีคำไม่เหมาะสม' }),
 });
 
 export const reactionBodySchema = z.object({

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAddComment, useComments, useDeleteComment } from '@/hooks/queries';
-import { containsProfanity } from '@/lib/profanity';
+import { containsHarm, containsProfanity } from '@/lib/profanity';
 import { t, relTime, type Lang } from '@/lib/i18n';
 import { useToastStore } from '@/stores/toastStore';
 import { apiErrorMessage } from '@/lib/api';
@@ -19,7 +19,7 @@ export function CommentThread({ postId, lang }: { postId: string; lang: Lang }) 
   const toast = useToastStore((s) => s.show);
   const [text, setText] = useState('');
 
-  const profane = text.trim().length > 0 && containsProfanity(text);
+  const profane = text.trim().length > 0 && (containsProfanity(text) || containsHarm(text));
   const valid = text.trim().length > 0 && text.length <= 200 && !profane;
 
   const submit = () => {

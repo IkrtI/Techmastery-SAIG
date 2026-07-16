@@ -170,10 +170,12 @@ Base `/api`. All responses JSON. Errors: `{error: {code, message, details?}}`.
 | method path | in | out |
 |---|---|---|
 | GET `/moods/:id/comments` | — | `{items: CommentPublic[]}` oldest-first (cap 200) |
-| POST `/moods/:id/comments` | `{text}` (1–200, profanity-screened) | `CommentPublic` (201) |
+| POST `/moods/:id/comments` | `{text}` (1–200, profanity + hostility screened) | `CommentPublic` (201) |
 | DELETE `/comments/:id` | — | 204; owner or admin |
 | PUT `/moods/:id/reaction` | `{type}` | `{reactions, myReaction}` — upsert, one per user |
 | DELETE `/moods/:id/reaction` | — | `{reactions, myReaction: null}` |
+
+**Profanity screen** (`lib/profanity.ts`, server authoritative, client mirrors): two tiers — vulgar Thai/English words (blocked in posts **and** comments; repeat-collapse, de-leet, Thai lookahead guards e.g. หี/หีบ, สัด/สัดส่วน, ห่า/ห่าง) and a hostile tier (ไปตาย, ตายซะ, kys, "kill yourself", …) blocked in **comments only** — self-venting posts like "อยากตาย" stay allowed.
 
 **CommentPublic**: `{id, text, faculty{slug,nameTh,nameEn}, year, createdAt, isMine}` — anonymity invariant applies.
 **MoodPublic** additionally carries `{commentCount, reactions: {encourage,relate,congrats}, myReaction}` (batched aggregation per feed page). Deleting a mood cascades its comments and reactions.

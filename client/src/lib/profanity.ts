@@ -1,4 +1,4 @@
-// Profanity screen (Thai + English) for mood text. Server copy is the
+// Profanity + hostility screen (Thai + English). Server copy is the
 // authority; client/src/lib/profanity.ts mirrors it for instant feedback.
 // Matching strategy:
 //  - NFKC + lowercase, strip zero-width chars
@@ -8,17 +8,39 @@
 //    guarded with lookaheads to avoid false positives (หี vs หีบ)
 //  - English: de-leet (@→a, 0→o, …) then non-letter-boundary match so
 //    "class"/"assist" never trip the list
+// Two tiers:
+//  - containsProfanity: vulgar words — blocked everywhere (posts + comments)
+//  - containsHarm: hostile / "go die" phrases — blocked in comments only.
+//    Venting posts may legitimately say e.g. "อยากตาย" about themselves;
+//    a comment telling someone ไปตาย is abuse, not venting.
 
 const TH_WORDS = [
-  'เหี้ย', 'เหีย', 'เชี่ย', 'เชี้ย', 'สัส', 'ควย', 'เย็ด', 'เงี่ยน',
+  'เหี้ย', 'เหีย', 'เชี่ย', 'เชี้ย', 'สัส', 'ควย', 'เย็ด', 'เยด', 'เงี่ยน',
   'ดอกทอง', 'อีดอก', 'กะหรี่', 'ส้นตีน', 'ระยำ', 'จัญไร', 'แตด', 'หน้าหี',
+  'หมอย', 'สันดาน', 'อีตัว', 'อีเวร', 'ไอ้เวร', 'ไอ้สัตว์', 'อีสัตว์',
+  'ไอ้ควาย', 'อีควาย', 'ไอ้บ้า', 'อีบ้า', 'ไอ้โง่', 'อีโง่', 'ชาติหมา',
+  'พ่อง', 'พ่อมึง', 'แม่มึง', 'เสือก',
 ];
-// หี alone needs a guard: match unless it's the start of หีบ (box).
-const TH_GUARDED = /หี(?!บ)/;
+// Short Thai words that collide with innocent longer words need lookahead guards.
+const TH_GUARDED = [
+  /หี(?!บ)/, // หี but not หีบ (box)
+  /สัด(?!ส่วน)/, // สัด but not สัดส่วน (proportion)
+  /ห่า(?![งน])/, // ห่า but not ห่าง (far) / ห่าน (goose)
+];
 
 const EN_WORDS = [
-  'fuck', 'shit', 'bitch', 'cunt', 'dick', 'cock', 'pussy', 'asshole',
-  'motherfucker', 'bastard', 'slut', 'whore', 'faggot', 'nigger', 'nigga',
+  'fuck', 'fucking', 'fucker', 'fucked', 'fuckin', 'fck', 'fuk',
+  'shit', 'shitty', 'bullshit', 'bitch', 'cunt', 'dick', 'dickhead',
+  'cock', 'pussy', 'asshole', 'asshat', 'motherfucker', 'bastard',
+  'slut', 'whore', 'faggot', 'nigger', 'nigga', 'retard', 'retarded',
+  'twat', 'wanker', 'prick', 'dumbass', 'jackass', 'douche', 'skank',
+];
+
+// Hostile phrases directed at the reader — comment-only tier.
+const TH_HARM = ['ไปตาย', 'ตายซะ', 'ตายๆ', 'ไปฆ่าตัวตาย', 'ฆ่าตัวตายไปเลย'];
+const EN_HARM = [
+  'kys', 'kill yourself', 'kill urself', 'go die', 'die already',
+  'end yourself', 'neck yourself', 'unalive yourself',
 ];
 
 function collapse(s: string): string {
@@ -26,7 +48,7 @@ function collapse(s: string): string {
 }
 
 function normalizeBase(text: string): string {
-  return text.normalize('NFKC').toLowerCase().replace(/[​-‏﻿]/g, '');
+  return text.normalize('NFKC').toLowerCase().replace(/[\u200b-\u200f\ufeff]/g, '');
 }
 
 function deleet(s: string): string {
@@ -39,21 +61,32 @@ function deleet(s: string): string {
     .replace(/7/g, 't');
 }
 
-export function containsProfanity(text: string): boolean {
-  const base = normalizeBase(text);
-  const collapsed = collapse(base);
+function hitThai(base: string, collapsed: string, words: string[]): boolean {
+  return words.some((w) => base.includes(w) || collapsed.includes(collapse(w)));
+}
 
-  for (const w of TH_WORDS) {
-    if (base.includes(w) || collapsed.includes(collapse(w))) return true;
-  }
-  if (TH_GUARDED.test(base) || TH_GUARDED.test(collapsed)) return true;
-
+function hitEnglish(base: string, collapsed: string, words: string[]): boolean {
   for (const source of [base, collapsed, deleet(base), deleet(collapsed)]) {
-    for (const w of EN_WORDS) {
-      const target = source === collapsed || source === deleet(collapsed) ? collapse(w) : w;
+    const isCollapsed = source === collapsed || source === deleet(collapsed);
+    for (const w of words) {
+      const target = isCollapsed ? collapse(w) : w;
       const re = new RegExp(`(?:^|[^a-z])${target}(?:[^a-z]|$)`);
       if (re.test(source)) return true;
     }
   }
   return false;
+}
+
+export function containsProfanity(text: string): boolean {
+  const base = normalizeBase(text);
+  const collapsed = collapse(base);
+  if (hitThai(base, collapsed, TH_WORDS)) return true;
+  if (TH_GUARDED.some((re) => re.test(base) || re.test(collapsed))) return true;
+  return hitEnglish(base, collapsed, EN_WORDS);
+}
+
+export function containsHarm(text: string): boolean {
+  const base = normalizeBase(text);
+  const collapsed = collapse(base);
+  return hitThai(base, collapsed, TH_HARM) || hitEnglish(base, collapsed, EN_HARM);
 }
