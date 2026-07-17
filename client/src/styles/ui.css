@@ -222,9 +222,9 @@
 .mm-react--add{padding:5px 9px;color:var(--text-muted)}
 .mm-react--add svg{width:16px;height:16px;display:block}
 .mm-react--add:hover{color:var(--text-body)}
-.mm-reactpicker{position:absolute;left:0;bottom:calc(100% + 6px);z-index:30;display:flex;gap:2px;padding:5px;
-  background:var(--surface-card);border:1px solid var(--border);border-radius:var(--radius-full);
-  box-shadow:var(--shadow-modal);animation:rgPopIn 160ms ease-out both;transform-origin:bottom left}
+.mm-reactpicker{position:absolute;left:0;bottom:calc(100% + 10px);z-index:30;display:flex;gap:4px;padding:6px;
+  background:var(--dock-bg);border:1px solid var(--border-strong);border-radius:var(--radius-full);
+  box-shadow:var(--shadow-dock);animation:rgPopIn 160ms ease-out both;transform-origin:bottom left}
 .mm-reactpicker__opt{width:36px;height:36px;border-radius:var(--radius-full);border:none;background:transparent;
   font-size:19px;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
   touch-action:manipulation;transition:background var(--dur-fast) ease,transform 120ms ease}
