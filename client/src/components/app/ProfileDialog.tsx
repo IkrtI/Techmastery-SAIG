@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { Button } from '@/components/core/Button';
 import { ProfileFormFields, useProfileForm } from './ProfileForm';
 import { useOnboard } from '@/hooks/queries';
@@ -71,7 +72,9 @@ export function ProfileDialog({ open, lang, onClose }: ProfileDialogProps) {
     </>
   );
 
-  return (
+  // Portal to <body>: the header's backdrop-filter creates a containing block
+  // that would otherwise hijack position:fixed and push the dialog off-screen.
+  return createPortal(
     <>
       <div className="mm-scrim" onClick={onClose} />
       {mobile ? (
@@ -83,6 +86,7 @@ export function ProfileDialog({ open, lang, onClose }: ProfileDialogProps) {
           {body}
         </div>
       )}
-    </>
+    </>,
+    document.body,
   );
 }

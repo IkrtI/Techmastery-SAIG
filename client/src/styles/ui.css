@@ -321,10 +321,11 @@ input[type='date'].mm-input{-webkit-appearance:none;appearance:none;min-height:3
 .mm-scrim--drawer{z-index:60;backdrop-filter:none;background:rgba(0,0,0,.6)}
 .mm-modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:71;width:calc(100% - 40px);max-width:460px;
   background:var(--surface-card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-modal);
-  padding:22px;display:flex;flex-direction:column;gap:16px;animation:rgModalIn 200ms var(--ease-spring, ease-out) both}
+  padding:22px;display:flex;flex-direction:column;gap:16px;max-height:calc(100dvh - 48px);overflow-y:auto;
+  animation:rgModalIn 200ms var(--ease-spring, ease-out) both}
 .mm-sheet{position:fixed;left:0;right:0;bottom:0;z-index:71;background:var(--surface-card);border-top:1px solid var(--border);
   border-radius:var(--radius-xl) var(--radius-xl) 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));
-  display:flex;flex-direction:column;gap:16px;animation:rgSheetIn var(--dur-sheet) ease-out}
+  display:flex;flex-direction:column;gap:16px;max-height:calc(100dvh - 32px);overflow-y:auto;animation:rgSheetIn var(--dur-sheet) ease-out}
 .mm-sheet--drawer{z-index:61}
 .mm-modal__head{display:flex;align-items:center;justify-content:space-between}
 .mm-modal__title{margin:0;font-size:16px;font-weight:700;color:var(--text-body)}
