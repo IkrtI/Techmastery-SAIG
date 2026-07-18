@@ -5,13 +5,14 @@ import { validate, parsedQuery } from '../middleware/validate.js';
 import { requireAuth, requireOnboarded } from '../middleware/auth.js';
 import { buildMoodFilter } from '../lib/moodFilters.js';
 import { statsQuerySchema } from './schemas.js';
+import { readLimiter } from '../middleware/rateLimits.js';
 
 type StatsQuery = z.infer<typeof statsQuerySchema>;
 
 export const statsRouter = Router();
 statsRouter.use(requireAuth, requireOnboarded);
 
-statsRouter.get('/overview', validate({ query: statsQuerySchema }), async (req, res, next) => {
+statsRouter.get('/overview', readLimiter, validate({ query: statsQuerySchema }), async (req, res, next) => {
   try {
     const q = parsedQuery<StatsQuery>(req);
     const counts: Record<MoodType, number> = { happy: 0, hyped: 0, meh: 0, tired: 0, stressed: 0, sad: 0 };

@@ -141,6 +141,10 @@ Base `/api`. All responses JSON. Errors: `{error: {code, message, details?}}`.
 | `FORBIDDEN` | 403 | RBAC/ownership denial |
 | `NOT_FOUND` | 404 | |
 | `RATE_LIMITED` | 429 | |
+
+**Rate limits** (per IP, `trust proxy 1`): mutations 30/5min (posts, comments, reactions, admin); reads 120/min (feed, stats, comments list, faculties); OIDC entry (`/auth/login`, `/auth/callback`) 20/5min; refresh 10/min. Shared in `middleware/rateLimits.ts`.
+
+**Secret rotation policy:** `JWT_SECRET` and the Mongo password are rotated manually via the Dokploy env (rotating JWT_SECRET invalidates all access tokens — clients recover through the refresh flow); rotate on suspicion of exposure and before final submission.
 | `INTERNAL` | 500 | |
 
 ### Auth

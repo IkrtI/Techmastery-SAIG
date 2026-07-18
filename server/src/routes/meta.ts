@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { Faculty } from '../models/Faculty.js';
 import { requireAuth } from '../middleware/auth.js';
+import { readLimiter } from '../middleware/rateLimits.js';
 
 export const metaRouter = Router();
 
@@ -8,7 +9,7 @@ metaRouter.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
-metaRouter.get('/faculties', requireAuth, async (_req, res, next) => {
+metaRouter.get('/faculties', requireAuth, readLimiter, async (_req, res, next) => {
   try {
     const faculties = await Faculty.find().sort({ nameTh: 1 });
     res.json(

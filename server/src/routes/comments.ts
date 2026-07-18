@@ -12,7 +12,7 @@ import { requireAuth, requireOnboarded, type AuthedRequest } from '../middleware
 import { toCommentPublic } from '../lib/serialize.js';
 import { fetchEngagementOne } from '../lib/engagement.js';
 import { commentBodySchema, idParamsSchema, reactionBodySchema } from './schemas.js';
-import { mutationLimiter } from './moods.js';
+import { mutationLimiter, readLimiter } from '../middleware/rateLimits.js';
 
 export const commentsRouter = Router();
 // Mounted at /api — guard per-route, never router-wide, so unrelated /api
@@ -28,7 +28,7 @@ async function mustFindMood(id: string) {
 }
 
 // Comments are oldest-first (a conversation under the post).
-commentsRouter.get('/moods/:id/comments', guards, validate({ params: idParamsSchema }), async (req: AuthedRequest, res: Response, next: NextFunction) => {
+commentsRouter.get('/moods/:id/comments', guards, readLimiter, validate({ params: idParamsSchema }), async (req: AuthedRequest, res: Response, next: NextFunction) => {
   try {
     await mustFindMood(req.params.id);
     const comments = (await Comment.find({ post: req.params.id })
@@ -49,6 +49,10 @@ commentsRouter.post(
   async (req: AuthedRequest, res: Response, next: NextFunction) => {
     try {
       await mustFindMood(req.params.id);
+      // Hard cap per post — the GET endpoint returns at most 200, so anything
+      // beyond that would be invisible (silent truncation).
+      const count = await Comment.countDocuments({ post: req.params.id });
+      if (count >= 200) throw new ApiError('VALIDATION_ERROR', 'โพสต์นี้มีความคิดเห็นครบ 200 แล้ว');
       const user = await User.findById(req.user!.sub);
       if (!user || !user.onboarded || !user.faculty || user.year == null) {
         throw new ApiError('NOT_ONBOARDED', 'Onboarding incomplete');

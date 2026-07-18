@@ -5,6 +5,9 @@ const refreshTokenSchema = new Schema({
   tokenHash: { type: String, required: true, unique: true },
   expiresAt: { type: Date, required: true },
   revokedAt: { type: Date },
+  // Rotation chain id — reuse of a revoked member revokes the whole family.
+  // Optional: tokens issued before this field predate family tracking.
+  family: { type: String, index: true },
 });
 
 refreshTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });

@@ -95,13 +95,15 @@ export async function exchangeAndVerify(code: string, verifier: string, expected
     throw new ApiError('VALIDATION_ERROR', 'OIDC nonce mismatch');
   }
   if (env().SSO_DEBUG) {
-    // Temporary diagnostics (enable with SSO_DEBUG=1): what the IdP actually returns.
+    // Temporary diagnostics (enable with SSO_DEBUG=1): which claims the IdP
+    // returns. Keys only — values are PII and must never reach logs.
     console.log('SAIG_SSO_DEBUG token_response_keys=' + JSON.stringify(Object.keys(tokens)));
-    console.log('SAIG_SSO_DEBUG id_token_payload=' + JSON.stringify(payload));
+    console.log('SAIG_SSO_DEBUG id_token_claim_keys=' + JSON.stringify(Object.keys(payload)));
     if (d.userinfo_endpoint && tokens.access_token) {
       try {
         const ui = await fetch(d.userinfo_endpoint, { headers: { authorization: `Bearer ${tokens.access_token}` } });
-        console.log('SAIG_SSO_DEBUG userinfo_status=' + ui.status + ' userinfo=' + (await ui.text()).slice(0, 1000));
+        const uiBody = (await ui.json().catch(() => ({}))) as Record<string, unknown>;
+        console.log('SAIG_SSO_DEBUG userinfo_status=' + ui.status + ' userinfo_keys=' + JSON.stringify(Object.keys(uiBody)));
       } catch (e) {
         console.log('SAIG_SSO_DEBUG userinfo_error=' + (e instanceof Error ? e.message : String(e)));
       }

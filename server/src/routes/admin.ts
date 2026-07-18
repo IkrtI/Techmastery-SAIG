@@ -5,7 +5,7 @@ import { Reaction } from '../models/Reaction.js';
 import { ApiError } from '../middleware/error.js';
 import { validate } from '../middleware/validate.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
-import { mutationLimiter } from './moods.js';
+import { mutationLimiter } from '../middleware/rateLimits.js';
 import { idParamsSchema } from './schemas.js';
 
 export const adminRouter = Router();

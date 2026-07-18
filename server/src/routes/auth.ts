@@ -17,6 +17,7 @@ import {
 import { normalizeMajorDisplay, normalizeMajorKey, toUserPublic } from '../lib/serialize.js';
 import { facultyCodeFromStudentId, isStaffId, STAFF_FACULTY_SLUG, STAFF_MAJOR, yearFromStudentId } from '../lib/facultyCode.js';
 import { onboardingBodySchema } from './schemas.js';
+import { authFlowLimiter, clientIp } from '../middleware/rateLimits.js';
 
 const REFRESH_COOKIE = 'refresh_token';
 const OIDC_COOKIES = { state: 'oidc_state', verifier: 'oidc_verifier', nonce: 'oidc_nonce' } as const;
@@ -43,12 +44,13 @@ const refreshLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 10,
   skip: () => env().NODE_ENV === 'test',
+  keyGenerator: clientIp,
   handler: (_req, _res, next) => next(new ApiError('RATE_LIMITED', 'Too many refresh attempts')),
 });
 
 export const authRouter = Router();
 
-authRouter.get('/login', async (_req, res, next) => {
+authRouter.get('/login', authFlowLimiter, async (_req, res, next) => {
   try {
     const { url, state, verifier, nonce } = await buildLoginRedirect();
     const fiveMin = 5 * 60 * 1000;
@@ -61,7 +63,7 @@ authRouter.get('/login', async (_req, res, next) => {
   }
 });
 
-authRouter.get('/callback', async (req, res) => {
+authRouter.get('/callback', authFlowLimiter, async (req, res) => {
   try {
     const code = typeof req.query.code === 'string' ? req.query.code : '';
     const state = typeof req.query.state === 'string' ? req.query.state : '';
@@ -83,9 +85,11 @@ authRouter.get('/callback', async (req, res) => {
         $set: {
           displayName: identity.name,
           studentId: identity.email.split('@')[0],
-          ...(isAdmin ? { role: 'admin' } : {}),
+          // SEED_ADMIN_EMAILS is authoritative: removal from the list
+          // downgrades on next login (seed script promotes the same list).
+          role: isAdmin ? 'admin' : 'user',
         },
-        $setOnInsert: { email: identity.email, ...(isAdmin ? {} : { role: 'user' }) },
+        $setOnInsert: { email: identity.email },
       },
       { upsert: true, new: true },
     );
@@ -129,9 +133,10 @@ authRouter.post('/refresh', refreshLimiter, async (req, res, next) => {
     }
     const rotation = await rotateRefreshToken(presented);
     if (!rotation.ok) {
-      // A known revoked token (incl. a losing concurrent request) must NOT
-      // clear the winner's fresh cookie; unknown/expired tokens do clear it.
-      if (rotation.reason === 'invalid') clearRefreshCookie(res);
+      // A known revoked token (a losing concurrent request) must NOT clear
+      // the winner's fresh cookie; unknown/expired tokens and detected reuse
+      // (stolen-chain replay) do clear it.
+      if (rotation.reason !== 'revoked') clearRefreshCookie(res);
       throw new ApiError('UNAUTHENTICATED', 'Refresh token rejected');
     }
     const user = await User.findById(rotation.userId).populate('faculty');

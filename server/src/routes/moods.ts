@@ -1,8 +1,6 @@
 import { Router } from 'express';
 import type { FilterQuery, Types } from 'mongoose';
 import type { z } from 'zod';
-import rateLimit from 'express-rate-limit';
-import { env } from '../config/env.js';
 import { Mood, type MoodDoc } from '../models/Mood.js';
 import { User } from '../models/User.js';
 import type { FacultyDoc } from '../models/Faculty.js';
@@ -16,13 +14,7 @@ import { emptyEngagement, fetchEngagement, fetchEngagementOne } from '../lib/eng
 import { Comment } from '../models/Comment.js';
 import { Reaction } from '../models/Reaction.js';
 import { createMoodBodySchema, idParamsSchema, listMoodsQuerySchema, updateMoodBodySchema } from './schemas.js';
-
-export const mutationLimiter = rateLimit({
-  windowMs: 5 * 60 * 1000,
-  limit: 30,
-  skip: () => env().NODE_ENV === 'test',
-  handler: (_req, _res, next) => next(new ApiError('RATE_LIMITED', 'Too many requests')),
-});
+import { mutationLimiter, readLimiter } from '../middleware/rateLimits.js';
 
 type ListQuery = z.infer<typeof listMoodsQuerySchema>;
 
@@ -31,7 +23,7 @@ type PopulatedMood = MoodDoc & { faculty: FacultyDoc | Types.ObjectId | null };
 export const moodsRouter = Router();
 moodsRouter.use(requireAuth, requireOnboarded);
 
-moodsRouter.get('/', validate({ query: listMoodsQuerySchema }), async (req: AuthedRequest, res, next) => {
+moodsRouter.get('/', readLimiter, validate({ query: listMoodsQuerySchema }), async (req: AuthedRequest, res, next) => {
   try {
     const q = parsedQuery<ListQuery>(req);
     const filter = await buildMoodFilter(q);
